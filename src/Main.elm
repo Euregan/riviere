@@ -1,9 +1,9 @@
 module Main exposing (..)
 
 import Browser
-import Browser.Events exposing (onClick)
+import Browser.Events exposing (onAnimationFrameDelta, onClick)
 import Browser.Navigation
-import FileTree exposing (File(..), FileTree)
+import FileTree exposing (Extension(..), File(..), FileTree, Visibility(..))
 import Html exposing (Html, button, div, text)
 import Html.Attributes exposing (style)
 import Json.Decode as Decoder
@@ -34,7 +34,7 @@ type alias Flags =
 init : Flags -> Url.Url -> Browser.Navigation.Key -> ( Model, Cmd Msg )
 init flags url key =
     ( { navigationKey = key
-      , fileTree = FileTree.init "unbreakable"
+      , fileTree = FileTree.init "unbreakable" [ File "package.json" JSON [ Visible, Hidden ] ]
       }
     , Cmd.none
     )
@@ -44,11 +44,15 @@ type Msg
     = LinkClicked Browser.UrlRequest
     | UrlChanged Url.Url
     | Clicked
+    | Tick Float
 
 
 subscriptions : Model -> Sub Msg
 subscriptions model =
-    onClick <| Decoder.succeed Clicked
+    Sub.batch
+        [ onClick <| Decoder.succeed Clicked
+        , onAnimationFrameDelta Tick
+        ]
 
 
 update : Msg -> Model -> ( Model, Cmd Msg )
@@ -72,6 +76,9 @@ update msg model =
 
         Clicked ->
             ( model, Cmd.none )
+
+        Tick delta ->
+            ( { model | fileTree = FileTree.tick delta model.fileTree }, Cmd.none )
 
 
 
