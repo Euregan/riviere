@@ -1,0 +1,16 @@
+{
+  "name": "no-error",
+  "version": "1.0.0",
+  "description": "",
+  "main": "index.js",
+  "scripts": {
+    "dev": "parcel src/index.html"
+  },
+  "author": "",
+  "license": "ISC",
+  "devDependencies": {
+    "@parcel/transformer-elm": "^2.2.1",
+    "elm": "^0.19.1-5",
+    "parcel": "^2.2.1"
+  }
+}
