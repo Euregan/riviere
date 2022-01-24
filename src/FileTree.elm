@@ -130,7 +130,23 @@ tickFile delta file =
                         InternalFile { f | transition = Disappearing (percent + (delta / transitionDuration)) }
 
         InternalDirectory d ->
-            InternalDirectory d
+            case d.transition of
+                Idle _ ->
+                    InternalDirectory d
+
+                Appearing percent ->
+                    if percent + (delta / transitionDuration) > 1 then
+                        InternalDirectory { d | transition = Idle Visible }
+
+                    else
+                        InternalDirectory { d | transition = Appearing (percent + (delta / transitionDuration)) }
+
+                Disappearing percent ->
+                    if percent + (delta / transitionDuration) > 1 then
+                        InternalDirectory { d | transition = Idle Hidden }
+
+                    else
+                        InternalDirectory { d | transition = Disappearing (percent + (delta / transitionDuration)) }
 
 
 view : FileTree -> Html msg
@@ -249,4 +265,23 @@ transitionToNext step file =
                         InternalFile f
 
         InternalDirectory d ->
-            InternalDirectory d
+            let
+                oldVisibility =
+                    get (step - 1) d.visibilities
+
+                newVisibility =
+                    get step d.visibilities
+            in
+            if oldVisibility == newVisibility then
+                InternalDirectory d
+
+            else
+                case newVisibility of
+                    Just Visible ->
+                        InternalDirectory { d | transition = Appearing 0 }
+
+                    Just Hidden ->
+                        InternalDirectory { d | transition = Disappearing 0 }
+
+                    Nothing ->
+                        InternalDirectory d

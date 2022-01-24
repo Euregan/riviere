@@ -34,7 +34,12 @@ type alias Flags =
 init : Flags -> Url.Url -> Browser.Navigation.Key -> ( Model, Cmd Msg )
 init flags url key =
     ( { navigationKey = key
-      , fileTree = FileTree.init "unbreakable" [ File "package.json" JSON [ Hidden, Visible ] ]
+      , fileTree =
+            FileTree.init "unbreakable"
+                [ File "package.json" JSON [ Hidden, Visible, Visible ]
+                , File "package-lock.json" JSON [ Hidden, Visible, Visible ]
+                , Directory "src" [] [ Hidden, Hidden, Visible ]
+                ]
       }
     , Cmd.none
     )
