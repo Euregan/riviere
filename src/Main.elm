@@ -34,7 +34,7 @@ type alias Flags =
 init : Flags -> Url.Url -> Browser.Navigation.Key -> ( Model, Cmd Msg )
 init flags url key =
     ( { navigationKey = key
-      , fileTree = FileTree.init "unbreakable" [ File "package.json" JSON [ Visible, Hidden ] ]
+      , fileTree = FileTree.init "unbreakable" [ File "package.json" JSON [ Hidden, Visible ] ]
       }
     , Cmd.none
     )
@@ -75,7 +75,7 @@ update msg model =
             ( model, Cmd.none )
 
         Clicked ->
-            ( model, Cmd.none )
+            ( { model | fileTree = FileTree.next model.fileTree }, Cmd.none )
 
         Tick delta ->
             ( { model | fileTree = FileTree.tick delta model.fileTree }, Cmd.none )

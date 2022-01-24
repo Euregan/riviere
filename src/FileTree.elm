@@ -1,4 +1,4 @@
-module FileTree exposing (Extension(..), File(..), FileTree, Visibility(..), init, tick, view)
+module FileTree exposing (Extension(..), File(..), FileTree, Visibility(..), init, next, tick, view)
 
 import Html exposing (Html, div, h2, img, li, text, ul)
 import Html.Attributes exposing (src, style)
@@ -36,7 +36,9 @@ type File
 
 type FileTree
     = FileTree
-        { name : String
+        { current : Int
+        , historySize : Int
+        , name : String
         , files : List InternalFile
         }
 
@@ -83,9 +85,21 @@ init rootDirectoryName files =
                         }
     in
     FileTree
-        { name = rootDirectoryName
+        { current = 0
+        , historySize = Maybe.withDefault 0 <| List.maximum <| List.map getFileHistorySize files
+        , name = rootDirectoryName
         , files = List.map fileToInternal files
         }
+
+
+getFileHistorySize : File -> Int
+getFileHistorySize file =
+    case file of
+        File _ _ visibilities ->
+            List.length visibilities
+
+        Directory _ children visibilities ->
+            Maybe.withDefault 0 <| List.maximum <| List.length visibilities :: List.map getFileHistorySize children
 
 
 tick : Float -> FileTree -> FileTree
@@ -184,3 +198,55 @@ viewFileRaw transition icon text =
         , style "transform" ("scaleY(" ++ String.fromFloat percentFromTransition ++ ")")
         ]
         [ icon, text ]
+
+
+next : FileTree -> FileTree
+next (FileTree tree) =
+    let
+        newCurrent : Int
+        newCurrent =
+            if tree.current < tree.historySize - 1 then
+                tree.current + 1
+
+            else
+                tree.historySize - 1
+    in
+    FileTree
+        { tree
+            | current = newCurrent
+            , files = List.map (transitionToNext newCurrent) tree.files
+        }
+
+
+transitionToNext : Int -> InternalFile -> InternalFile
+transitionToNext step file =
+    let
+        get : Int -> List Visibility -> Maybe Visibility
+        get index visibilities =
+            List.drop index visibilities |> List.head
+    in
+    case file of
+        InternalFile f ->
+            let
+                oldVisibility =
+                    get (step - 1) f.visibilities
+
+                newVisibility =
+                    get step f.visibilities
+            in
+            if oldVisibility == newVisibility then
+                InternalFile f
+
+            else
+                case newVisibility of
+                    Just Visible ->
+                        InternalFile { f | transition = Appearing 0 }
+
+                    Just Hidden ->
+                        InternalFile { f | transition = Disappearing 0 }
+
+                    Nothing ->
+                        InternalFile f
+
+        InternalDirectory d ->
+            InternalDirectory d
