@@ -218,20 +218,15 @@ viewFileRaw transition icon text =
 
 next : FileTree -> FileTree
 next (FileTree tree) =
-    let
-        newCurrent : Int
-        newCurrent =
-            if tree.current < tree.historySize - 1 then
-                tree.current + 1
+    if tree.current < tree.historySize - 1 then
+        FileTree
+            { tree
+                | current = tree.current + 1
+                , files = List.map (transitionToNext (tree.current + 1)) tree.files
+            }
 
-            else
-                tree.historySize - 1
-    in
-    FileTree
-        { tree
-            | current = newCurrent
-            , files = List.map (transitionToNext newCurrent) tree.files
-        }
+    else
+        FileTree tree
 
 
 transitionToNext : Int -> InternalFile -> InternalFile
