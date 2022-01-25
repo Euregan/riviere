@@ -211,7 +211,7 @@ viewFileRaw transition icon text =
         , style "align-items" "center"
         , style "overflow" "hidden"
         , style "height" (String.fromFloat (percentFromTransition * 1.25) ++ "rem")
-        , style "transform" ("scaleY(" ++ String.fromFloat percentFromTransition ++ ")")
+        , style "transform" ("transformY(" ++ String.fromFloat (1 - percentFromTransition) ++ ")")
         ]
         [ icon, text ]
 
