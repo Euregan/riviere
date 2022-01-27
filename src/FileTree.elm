@@ -16,6 +16,9 @@ transitionDuration =
 
 type Extension
     = JSON
+    | JSX
+    | JavaScript
+    | HTML
 
 
 type Transition
@@ -70,6 +73,15 @@ iconFromExtension icon =
     case icon of
         JSON ->
             Icon.json
+
+        JSX ->
+            Icon.jsx
+
+        JavaScript ->
+            Icon.javascript
+
+        HTML ->
+            Icon.html
 
 
 viewFileRaw : Transition -> Html msg -> Html msg -> Html msg

@@ -38,16 +38,43 @@ init flags url key =
       , slides =
             Slides.init
                 { name = "unbreakable"
-                , files =
-                    [ File "package.json" JSON
-                    , File "package-lock.json" JSON
-                    ]
+                , files = []
                 }
                 [ { name = "unbreakable"
                   , files =
                         [ File "package.json" JSON
                         , File "package-lock.json" JSON
-                        , Directory "src" []
+                        ]
+                  }
+                , { name = "unbreakable"
+                  , files =
+                        [ File "package.json" JSON
+                        , File "package-lock.json" JSON
+                        , File "webpack.config.js" JavaScript
+                        , File "index.html" HTML
+                        ]
+                  }
+                , { name = "unbreakable"
+                  , files =
+                        [ File "package.json" JSON
+                        , File "package-lock.json" JSON
+                        , File "webpack.config.js" JavaScript
+                        , File "index.html" HTML
+                        , Directory "src"
+                            [ File "App.jsx" JSX
+                            ]
+                        ]
+                  }
+                , { name = "unbreakable"
+                  , files =
+                        [ File "package.json" JSON
+                        , File "package-lock.json" JSON
+                        , File "webpack.config.js" JavaScript
+                        , File "index.html" HTML
+                        , Directory "src"
+                            [ File "App.jsx" JSX
+                            , File "Login.jsx" JSX
+                            ]
                         ]
                   }
                 ]
