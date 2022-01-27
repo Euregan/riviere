@@ -3,10 +3,11 @@ module Main exposing (..)
 import Browser
 import Browser.Events exposing (onAnimationFrameDelta, onClick)
 import Browser.Navigation
-import FileTree exposing (Extension(..), File(..), FileTree, Visibility(..))
+import FileTree exposing (Extension(..), File(..))
 import Html exposing (Html, button, div, text)
 import Html.Attributes exposing (style)
 import Json.Decode as Decoder
+import Slides exposing (Slides)
 import Url
 
 
@@ -23,7 +24,7 @@ main =
 
 type alias Model =
     { navigationKey : Browser.Navigation.Key
-    , fileTree : FileTree
+    , slides : Slides
     }
 
 
@@ -34,11 +35,21 @@ type alias Flags =
 init : Flags -> Url.Url -> Browser.Navigation.Key -> ( Model, Cmd Msg )
 init flags url key =
     ( { navigationKey = key
-      , fileTree =
-            FileTree.init "unbreakable"
-                [ File "package.json" JSON [ Hidden, Visible, Visible ]
-                , File "package-lock.json" JSON [ Hidden, Visible, Visible ]
-                , Directory "src" [] [ Hidden, Hidden, Visible ]
+      , slides =
+            Slides.init
+                { name = "unbreakable"
+                , files =
+                    [ File "package.json" JSON
+                    , File "package-lock.json" JSON
+                    ]
+                }
+                [ { name = "unbreakable"
+                  , files =
+                        [ File "package.json" JSON
+                        , File "package-lock.json" JSON
+                        , Directory "src" []
+                        ]
+                  }
                 ]
       }
     , Cmd.none
@@ -80,10 +91,14 @@ update msg model =
             ( model, Cmd.none )
 
         Clicked ->
-            ( { model | fileTree = FileTree.next model.fileTree }, Cmd.none )
+            ( { model | slides = Slides.next model.slides }, Cmd.none )
 
         Tick delta ->
-            ( { model | fileTree = FileTree.tick delta model.fileTree }, Cmd.none )
+            ( { model
+                | slides = Slides.tick delta model.slides
+              }
+            , Cmd.none
+            )
 
 
 
@@ -130,6 +145,6 @@ view model =
             , style "height" "100vh"
             , style "box-sizing" "border-box"
             ]
-            [ FileTree.view model.fileTree ]
+            [ FileTree.view <| Slides.current model.slides ]
         ]
     }

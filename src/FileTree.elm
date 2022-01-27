@@ -1,4 +1,4 @@
-module FileTree exposing (Extension(..), File(..), FileTree, Visibility(..), init, next, tick, view)
+module FileTree exposing (DisplayFileTree, Extension(..), File(..), FileTree, swap, tick, view)
 
 import Html exposing (Html, div, h2, img, li, text, ul)
 import Html.Attributes exposing (src, style)
@@ -30,154 +30,39 @@ type Visibility
 
 
 type File
-    = File String Extension (List Visibility)
-    | Directory String (List File) (List Visibility)
+    = File String Extension
+    | Directory String (List File)
 
 
-type FileTree
-    = FileTree
-        { current : Int
-        , historySize : Int
-        , name : String
-        , files : List InternalFile
-        }
+type alias FileTree =
+    { name : String
+    , files : List File
+    }
 
 
-type InternalFile
-    = InternalFile
+type DisplayFile
+    = DisplayFile
         { name : String
         , extension : Extension
-        , visibilities : List Visibility
         , transition : Transition
         }
-    | InternalDirectory
+    | DisplayDirectory
         { name : String
-        , children : List InternalFile
-        , visibilities : List Visibility
+        , children : List DisplayFile
         , transition : Transition
         }
 
 
-init : String -> List File -> FileTree
-init rootDirectoryName files =
-    let
-        initialTransition : List Visibility -> Transition
-        initialTransition visibilities =
-            List.head visibilities |> Maybe.withDefault Hidden |> Idle
-
-        fileToInternal : File -> InternalFile
-        fileToInternal file =
-            case file of
-                File name extension visibilities ->
-                    InternalFile
-                        { name = name
-                        , extension = extension
-                        , visibilities = visibilities
-                        , transition = initialTransition visibilities
-                        }
-
-                Directory name children visibilities ->
-                    InternalDirectory
-                        { name = name
-                        , children = List.map fileToInternal children
-                        , visibilities = visibilities
-                        , transition = initialTransition visibilities
-                        }
-    in
-    FileTree
-        { current = 0
-        , historySize = Maybe.withDefault 0 <| List.maximum <| List.map getFileHistorySize files
-        , name = rootDirectoryName
-        , files = List.map fileToInternal files
-        }
+type alias DisplayFileTree =
+    { name : String
+    , files : List DisplayFile
+    }
 
 
-getFileHistorySize : File -> Int
-getFileHistorySize file =
-    case file of
-        File _ _ visibilities ->
-            List.length visibilities
-
-        Directory _ children visibilities ->
-            Maybe.withDefault 0 <| List.maximum <| List.length visibilities :: List.map getFileHistorySize children
-
-
-tick : Float -> FileTree -> FileTree
-tick delta (FileTree tree) =
-    FileTree { tree | files = List.map (tickFile delta) tree.files }
-
-
-tickFile : Float -> InternalFile -> InternalFile
-tickFile delta file =
-    case file of
-        InternalFile f ->
-            case f.transition of
-                Idle _ ->
-                    InternalFile f
-
-                Appearing percent ->
-                    if percent + (delta / transitionDuration) > 1 then
-                        InternalFile { f | transition = Idle Visible }
-
-                    else
-                        InternalFile { f | transition = Appearing (percent + (delta / transitionDuration)) }
-
-                Disappearing percent ->
-                    if percent + (delta / transitionDuration) > 1 then
-                        InternalFile { f | transition = Idle Hidden }
-
-                    else
-                        InternalFile { f | transition = Disappearing (percent + (delta / transitionDuration)) }
-
-        InternalDirectory d ->
-            case d.transition of
-                Idle _ ->
-                    InternalDirectory d
-
-                Appearing percent ->
-                    if percent + (delta / transitionDuration) > 1 then
-                        InternalDirectory { d | transition = Idle Visible }
-
-                    else
-                        InternalDirectory { d | transition = Appearing (percent + (delta / transitionDuration)) }
-
-                Disappearing percent ->
-                    if percent + (delta / transitionDuration) > 1 then
-                        InternalDirectory { d | transition = Idle Hidden }
-
-                    else
-                        InternalDirectory { d | transition = Disappearing (percent + (delta / transitionDuration)) }
-
-
-view : FileTree -> Html msg
-view (FileTree tree) =
-    ul
-        [ style "background" "#21252b"
-        , style "color" newColor
-        , style "fill" newColor
-        , style "height" "100%"
-        , style "padding" "2rem"
-        , style "box-sizing" "border-box"
-        ]
-        [ li []
-            [ viewFileRaw (Idle Visible) Icon.git (text tree.name)
-            , ul [] <| List.map viewFile tree.files
-            ]
-        ]
-
-
-viewFile : InternalFile -> Html msg
-viewFile file =
-    li [] <|
-        case file of
-            InternalFile { name, extension, transition } ->
-                [ viewFileRaw transition (iconFromExtension extension) (text name)
-                ]
-
-            InternalDirectory { name, children, transition } ->
-                [ viewFileRaw transition Icon.folder (text name)
-                , ul [] <| List.map viewFile children
-                ]
+type Comparison a
+    = NotFound
+    | Keep a
+    | Drop
 
 
 iconFromExtension : Extension -> Svg html
@@ -216,67 +101,197 @@ viewFileRaw transition icon text =
         [ icon, text ]
 
 
-next : FileTree -> FileTree
-next (FileTree tree) =
-    if tree.current < tree.historySize - 1 then
-        FileTree
-            { tree
-                | current = tree.current + 1
-                , files = List.map (transitionToNext (tree.current + 1)) tree.files
-            }
-
-    else
-        FileTree tree
-
-
-transitionToNext : Int -> InternalFile -> InternalFile
-transitionToNext step file =
+tick : Float -> DisplayFileTree -> DisplayFileTree
+tick delta tree =
     let
-        get : Int -> List Visibility -> Maybe Visibility
-        get index visibilities =
-            List.drop index visibilities |> List.head
+        tickFile : DisplayFile -> DisplayFile
+        tickFile file =
+            case file of
+                DisplayFile f ->
+                    case f.transition of
+                        Idle _ ->
+                            DisplayFile f
+
+                        Appearing percent ->
+                            if percent + (delta / transitionDuration) > 1 then
+                                DisplayFile { f | transition = Idle Visible }
+
+                            else
+                                DisplayFile { f | transition = Appearing (percent + (delta / transitionDuration)) }
+
+                        Disappearing percent ->
+                            if percent + (delta / transitionDuration) > 1 then
+                                DisplayFile { f | transition = Idle Hidden }
+
+                            else
+                                DisplayFile { f | transition = Disappearing (percent + (delta / transitionDuration)) }
+
+                DisplayDirectory d ->
+                    case d.transition of
+                        Idle _ ->
+                            DisplayDirectory { d | children = List.map tickFile d.children }
+
+                        Appearing percent ->
+                            if percent + (delta / transitionDuration) > 1 then
+                                DisplayDirectory
+                                    { d
+                                        | transition = Idle Visible
+                                        , children = List.map tickFile d.children
+                                    }
+
+                            else
+                                DisplayDirectory
+                                    { d
+                                        | transition = Appearing (percent + (delta / transitionDuration))
+                                        , children = List.map tickFile d.children
+                                    }
+
+                        Disappearing percent ->
+                            if percent + (delta / transitionDuration) > 1 then
+                                DisplayDirectory
+                                    { d
+                                        | transition = Idle Hidden
+                                        , children = List.map tickFile d.children
+                                    }
+
+                            else
+                                DisplayDirectory
+                                    { d
+                                        | transition = Disappearing (percent + (delta / transitionDuration))
+                                        , children = List.map tickFile d.children
+                                    }
     in
-    case file of
-        InternalFile f ->
-            let
-                oldVisibility =
-                    get (step - 1) f.visibilities
+    { tree | files = List.map tickFile tree.files }
 
-                newVisibility =
-                    get step f.visibilities
-            in
-            if oldVisibility == newVisibility then
-                InternalFile f
 
-            else
-                case newVisibility of
-                    Just Visible ->
-                        InternalFile { f | transition = Appearing 0 }
+view : DisplayFileTree -> Html msg
+view tree =
+    let
+        viewFile : DisplayFile -> Html msg
+        viewFile file =
+            li [] <|
+                case file of
+                    DisplayFile { name, extension, transition } ->
+                        [ viewFileRaw transition (iconFromExtension extension) (text name)
+                        ]
 
-                    Just Hidden ->
-                        InternalFile { f | transition = Disappearing 0 }
+                    DisplayDirectory { name, children, transition } ->
+                        [ viewFileRaw transition Icon.folder (text name)
+                        , ul [] <| List.map viewFile children
+                        ]
+    in
+    ul
+        [ style "background" "#21252b"
+        , style "color" newColor
+        , style "fill" newColor
+        , style "height" "100%"
+        , style "padding" "2rem"
+        , style "box-sizing" "border-box"
+        ]
+        [ li []
+            [ viewFileRaw (Idle Visible) Icon.git (text tree.name)
+            , ul [] <| List.map viewFile tree.files
+            ]
+        ]
 
-                    Nothing ->
-                        InternalFile f
 
-        InternalDirectory d ->
-            let
-                oldVisibility =
-                    get (step - 1) d.visibilities
+notFoundDefault : a -> Comparison a -> Comparison a
+notFoundDefault default comparison =
+    case comparison of
+        NotFound ->
+            Keep default
 
-                newVisibility =
-                    get step d.visibilities
-            in
-            if oldVisibility == newVisibility then
-                InternalDirectory d
+        _ ->
+            comparison
 
-            else
-                case newVisibility of
-                    Just Visible ->
-                        InternalDirectory { d | transition = Appearing 0 }
 
-                    Just Hidden ->
-                        InternalDirectory { d | transition = Disappearing 0 }
+swap : FileTree -> FileTree -> DisplayFileTree
+swap from to =
+    let
+        transitionDirectory : List File -> List File -> List DisplayFile
+        transitionDirectory fromFiles toFiles =
+            List.append
+                (List.map
+                    (\fromFile ->
+                        List.foldl
+                            (\toFile found ->
+                                case ( found, fromFile, toFile ) of
+                                    ( NotFound, File fromName fromExtension, File toName toExtension ) ->
+                                        if fromName == toName && fromExtension == toExtension then
+                                            Keep (DisplayFile { name = toName, extension = toExtension, transition = Idle Visible })
 
-                    Nothing ->
-                        InternalDirectory d
+                                        else
+                                            found
+
+                                    ( NotFound, Directory fromName fromChildren, Directory toName toChildren ) ->
+                                        if fromName == toName then
+                                            Keep (DisplayDirectory { name = toName, children = transitionDirectory fromChildren toChildren, transition = Idle Visible })
+
+                                        else
+                                            found
+
+                                    _ ->
+                                        found
+                            )
+                            NotFound
+                            toFiles
+                            |> notFoundDefault
+                                (case fromFile of
+                                    File fromName fromExtension ->
+                                        DisplayFile { name = fromName, extension = fromExtension, transition = Disappearing 0 }
+
+                                    Directory fromName children ->
+                                        DisplayDirectory { name = fromName, children = transitionDirectory children [], transition = Disappearing 0 }
+                                )
+                    )
+                    fromFiles
+                )
+                (List.map
+                    (\toFile ->
+                        List.foldl
+                            (\fromFile found ->
+                                case ( found, fromFile, toFile ) of
+                                    ( NotFound, File fromName fromExtension, File toName toExtension ) ->
+                                        if fromName == toName && fromExtension == toExtension then
+                                            Drop
+
+                                        else
+                                            found
+
+                                    ( NotFound, Directory fromName _, Directory toName _ ) ->
+                                        if fromName == toName then
+                                            Drop
+
+                                        else
+                                            found
+
+                                    _ ->
+                                        found
+                            )
+                            NotFound
+                            fromFiles
+                            |> notFoundDefault
+                                (case toFile of
+                                    File toName toExtension ->
+                                        DisplayFile { name = toName, extension = toExtension, transition = Appearing 0 }
+
+                                    Directory toName children ->
+                                        DisplayDirectory { name = toName, children = transitionDirectory [] children, transition = Appearing 0 }
+                                )
+                    )
+                    toFiles
+                )
+                |> List.foldl
+                    (\comparison kept ->
+                        case comparison of
+                            Keep element ->
+                                element :: kept
+
+                            _ ->
+                                kept
+                    )
+                    []
+    in
+    { name = to.name
+    , files = transitionDirectory from.files to.files
+    }
