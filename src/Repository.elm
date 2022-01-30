@@ -4,6 +4,7 @@ import File exposing (DisplayFile, File(..))
 import FileTree exposing (DisplayFileTree, FileTree)
 import Html exposing (Html, div)
 import Html.Attributes exposing (style)
+import Message exposing (Message)
 
 
 type alias Repository =
@@ -14,7 +15,7 @@ type DisplayRepository
     = DisplayRepository ( DisplayFileTree, DisplayFile )
 
 
-view : DisplayRepository -> Html msg
+view : DisplayRepository -> Html Message
 view (DisplayRepository ( fileTree, file )) =
     div
         [ style "height" "100%"

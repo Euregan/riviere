@@ -6,6 +6,7 @@ import Browser.Navigation
 import Deck exposing (Deck)
 import Html exposing (Html)
 import Json.Decode as Decoder
+import Message exposing (Message(..))
 import Slides exposing (slides)
 import Url
 
@@ -31,7 +32,7 @@ type alias Flags =
     ()
 
 
-init : Flags -> Url.Url -> Browser.Navigation.Key -> ( Model, Cmd Msg )
+init : Flags -> Url.Url -> Browser.Navigation.Key -> ( Model, Cmd Message )
 init flags url key =
     ( { navigationKey = key
       , slides = slides
@@ -40,14 +41,7 @@ init flags url key =
     )
 
 
-type Msg
-    = LinkClicked Browser.UrlRequest
-    | UrlChanged Url.Url
-    | Clicked
-    | Tick Float
-
-
-subscriptions : Model -> Sub Msg
+subscriptions : Model -> Sub Message
 subscriptions model =
     Sub.batch
         [ onClick <| Decoder.succeed Clicked
@@ -55,9 +49,9 @@ subscriptions model =
         ]
 
 
-update : Msg -> Model -> ( Model, Cmd Msg )
-update msg model =
-    case msg of
+update : Message -> Model -> ( Model, Cmd Message )
+update message model =
+    case message of
         LinkClicked urlRequest ->
             case urlRequest of
                 Browser.Internal url ->
@@ -86,7 +80,7 @@ update msg model =
 
 
 
--- stepUrl : Url.Url -> Model -> ( Model, Cmd Msg )
+-- stepUrl : Url.Url -> Model -> ( Model, Cmd Message )
 -- stepUrl url model =
 --     let
 --         session =
@@ -120,7 +114,7 @@ update msg model =
 --             )
 
 
-view : Model -> Browser.Document Msg
+view : Model -> Browser.Document Message
 view model =
     { title = "Making an unbreakable website"
     , body = [ Deck.view model.slides ]

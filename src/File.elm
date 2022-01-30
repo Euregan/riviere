@@ -5,6 +5,7 @@ import Extension exposing (Extension(..))
 import Html exposing (Html, code, div, pre, text)
 import Html.Attributes exposing (class, style)
 import Icon
+import Message exposing (Message)
 import SyntaxHighlight exposing (oneDark, toBlockHtml, useTheme)
 
 
@@ -88,10 +89,10 @@ swap from to =
         }
 
 
-view : DisplayFile -> Html msg
+view : DisplayFile -> Html Message
 view (DisplayFile file) =
     let
-        rollingTransition : Transition a -> Float -> (a -> Html msg) -> Html msg
+        rollingTransition : Transition a -> Float -> (a -> Html Message) -> Html Message
         rollingTransition transition size viewTransition =
             case transition of
                 Hidden ->

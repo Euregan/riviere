@@ -4,6 +4,7 @@ import Extension exposing (Extension)
 import Html exposing (Html, div, h2, img, li, text, ul)
 import Html.Attributes exposing (src, style)
 import Icon
+import Message exposing (Message)
 
 
 newColor =
@@ -61,7 +62,7 @@ type Comparison a
     | Drop
 
 
-viewFileRaw : Transition -> Html msg -> Html msg -> Html msg
+viewFileRaw : Transition -> Html Message -> Html Message -> Html Message
 viewFileRaw transition icon text =
     let
         percentFromTransition : Float
@@ -152,10 +153,10 @@ tick delta tree =
     { tree | files = List.map tickFile tree.files }
 
 
-view : DisplayFileTree -> Html msg
+view : DisplayFileTree -> Html Message
 view tree =
     let
-        viewFile : DisplayFile -> Html msg
+        viewFile : DisplayFile -> Html Message
         viewFile file =
             li [] <|
                 case file of

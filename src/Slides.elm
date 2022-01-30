@@ -1,9 +1,11 @@
 module Slides exposing (slides)
 
+import Application exposing (Application(..))
 import Deck exposing (Deck, Slide(..))
 import Extension exposing (Extension(..))
 import File exposing (File(..))
 import FileTree exposing (File(..))
+import Html
 
 
 slides : Deck

@@ -2,6 +2,7 @@ module Title exposing (DisplayTitle, Title, swap, tick, view)
 
 import Html exposing (Html, div, h1, h2, text)
 import Html.Attributes exposing (class, style)
+import Message exposing (Message)
 
 
 type alias Title =
@@ -14,7 +15,7 @@ type DisplayTitle
     = DisplayTitle Title
 
 
-view : DisplayTitle -> Html msg
+view : DisplayTitle -> Html Message
 view (DisplayTitle { title, subtitle }) =
     div []
         [ h1 [] [ text title ]

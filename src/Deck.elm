@@ -1,10 +1,12 @@
 module Deck exposing (Deck, Slide(..), init, next, tick, view)
 
+import Application exposing (Application, DisplayApplication)
 import Array
 import File exposing (DisplayFile, File)
 import FileTree exposing (DisplayFileTree, FileTree)
 import Html exposing (Html, div, li, ul)
 import Html.Attributes exposing (style)
+import Message exposing (Message)
 import Repository exposing (DisplayRepository, Repository)
 import Title exposing (DisplayTitle, Title)
 
@@ -15,14 +17,20 @@ transitionDuration =
 
 type Slide
     = Title Title
-    | Repository ( FileTree, File )
+    | Repository Repository
+    | Application Application
 
 
 type DisplaySlide
     = IdleTitle DisplayTitle
     | IdleRepository DisplayRepository
+    | IdleApplication DisplayApplication
     | TitleToRepository Float DisplayTitle DisplayRepository
     | RepositoryToTitle Float DisplayRepository DisplayTitle
+    | ApplicationToTitle Float DisplayApplication DisplayTitle
+    | ApplicationToRepository Float DisplayApplication DisplayRepository
+    | RepositoryToApplication Float DisplayRepository DisplayApplication
+    | TitleToApplication Float DisplayTitle DisplayApplication
 
 
 type Deck
@@ -54,6 +62,9 @@ transitionSlide from to =
         ( Title fromTitle, Title toTitle ) ->
             IdleTitle <| Title.swap fromTitle toTitle
 
+        ( Application fromApplication, Application toApplication ) ->
+            IdleApplication <| Application.swap fromApplication toApplication
+
         ( Title title, Repository repository ) ->
             TitleToRepository 0
                 (Title.swap title title)
@@ -63,6 +74,26 @@ transitionSlide from to =
             RepositoryToTitle 0
                 (Repository.swap repository repository)
                 (Title.swap title title)
+
+        ( Application application, Title title ) ->
+            ApplicationToTitle 0
+                (Application.swap application application)
+                (Title.swap title title)
+
+        ( Application application, Repository repository ) ->
+            ApplicationToRepository 0
+                (Application.swap application application)
+                (Repository.swap repository repository)
+
+        ( Title title, Application application ) ->
+            TitleToApplication 0
+                (Title.swap title title)
+                (Application.swap application application)
+
+        ( Repository repository, Application application ) ->
+            RepositoryToApplication 0
+                (Repository.swap repository repository)
+                (Application.swap application application)
 
 
 tick : Float -> Deck -> Deck
@@ -77,12 +108,17 @@ tick delta (Deck slides) =
                 IdleTitle title ->
                     IdleTitle (Title.tick delta title)
 
+                IdleApplication application ->
+                    IdleApplication (Application.tick delta application)
+
                 TitleToRepository percent title repository ->
                     if percent + (delta / transitionDuration) > 1 then
                         IdleRepository (Repository.tick delta repository)
 
                     else
-                        TitleToRepository (percent + (delta / transitionDuration)) (Title.tick delta title) repository
+                        TitleToRepository (percent + (delta / transitionDuration))
+                            (Title.tick delta title)
+                            repository
 
                 RepositoryToTitle percent repository title ->
                     if percent + (delta / transitionDuration) > 1 then
@@ -92,6 +128,42 @@ tick delta (Deck slides) =
                         RepositoryToTitle (percent + (delta / transitionDuration))
                             (Repository.tick delta repository)
                             title
+
+                ApplicationToTitle percent application title ->
+                    if percent + (delta / transitionDuration) > 1 then
+                        IdleTitle (Title.tick delta title)
+
+                    else
+                        ApplicationToTitle (percent + (delta / transitionDuration))
+                            (Application.tick delta application)
+                            title
+
+                ApplicationToRepository percent application repository ->
+                    if percent + (delta / transitionDuration) > 1 then
+                        IdleRepository (Repository.tick delta repository)
+
+                    else
+                        ApplicationToRepository (percent + (delta / transitionDuration))
+                            (Application.tick delta application)
+                            repository
+
+                RepositoryToApplication percent repository application ->
+                    if percent + (delta / transitionDuration) > 1 then
+                        IdleApplication (Application.tick delta application)
+
+                    else
+                        RepositoryToApplication (percent + (delta / transitionDuration))
+                            (Repository.tick delta repository)
+                            application
+
+                TitleToApplication percent title application ->
+                    if percent + (delta / transitionDuration) > 1 then
+                        IdleApplication (Application.tick delta application)
+
+                    else
+                        TitleToApplication (percent + (delta / transitionDuration))
+                            (Title.tick delta title)
+                            application
     in
     Deck
         { slides
@@ -117,10 +189,10 @@ next (Deck slides) =
         Deck slides
 
 
-view : Deck -> Html msg
+view : Deck -> Html Message
 view (Deck slides) =
     let
-        transition : Float -> Html msg -> Html msg -> Html msg
+        transition : Float -> Html Message -> Html Message -> Html Message
         transition percent from to =
             ul
                 [ style "width" "calc(100vw - 20vh)"
@@ -143,7 +215,7 @@ view (Deck slides) =
                     [ to ]
                 ]
 
-        viewSlide : DisplaySlide -> Html msg
+        viewSlide : DisplaySlide -> Html Message
         viewSlide slide =
             case slide of
                 IdleRepository repository ->
@@ -151,6 +223,9 @@ view (Deck slides) =
 
                 IdleTitle title ->
                     Title.view title
+
+                IdleApplication application ->
+                    Application.view application
 
                 TitleToRepository percent title repository ->
                     transition percent
@@ -161,6 +236,26 @@ view (Deck slides) =
                     transition percent
                         (Repository.view repository)
                         (Title.view title)
+
+                ApplicationToTitle percent application title ->
+                    transition percent
+                        (Application.view application)
+                        (Title.view title)
+
+                ApplicationToRepository percent application repository ->
+                    transition percent
+                        (Application.view application)
+                        (Repository.view repository)
+
+                RepositoryToApplication percent repository application ->
+                    transition percent
+                        (Repository.view repository)
+                        (Application.view application)
+
+                TitleToApplication percent title application ->
+                    transition percent
+                        (Title.view title)
+                        (Application.view application)
     in
     Html.main_
         [ style "padding" "10vh"
