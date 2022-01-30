@@ -1,9 +1,9 @@
-module FileTree exposing (DisplayFileTree, Extension(..), File(..), FileTree, swap, tick, view)
+module FileTree exposing (DisplayFileTree, File(..), FileTree, swap, tick, view)
 
+import Extension exposing (Extension)
 import Html exposing (Html, div, h2, img, li, text, ul)
 import Html.Attributes exposing (src, style)
 import Icon
-import Svg exposing (Svg)
 
 
 newColor =
@@ -12,13 +12,6 @@ newColor =
 
 transitionDuration =
     200
-
-
-type Extension
-    = JSON
-    | JSX
-    | JavaScript
-    | HTML
 
 
 type Transition
@@ -68,22 +61,6 @@ type Comparison a
     | Drop
 
 
-iconFromExtension : Extension -> Svg html
-iconFromExtension icon =
-    case icon of
-        JSON ->
-            Icon.json
-
-        JSX ->
-            Icon.jsx
-
-        JavaScript ->
-            Icon.javascript
-
-        HTML ->
-            Icon.html
-
-
 viewFileRaw : Transition -> Html msg -> Html msg -> Html msg
 viewFileRaw transition icon text =
     let
@@ -108,7 +85,6 @@ viewFileRaw transition icon text =
         , style "align-items" "center"
         , style "overflow" "hidden"
         , style "height" (String.fromFloat (percentFromTransition * 1.25) ++ "rem")
-        , style "transform" ("transformY(" ++ String.fromFloat (1 - percentFromTransition) ++ ")")
         ]
         [ icon, text ]
 
@@ -184,7 +160,7 @@ view tree =
             li [] <|
                 case file of
                     DisplayFile { name, extension, transition } ->
-                        [ viewFileRaw transition (iconFromExtension extension) (text name)
+                        [ viewFileRaw transition (Extension.view extension) (text name)
                         ]
 
                     DisplayDirectory { name, children, transition } ->
@@ -199,6 +175,7 @@ view tree =
         , style "height" "100%"
         , style "padding" "2rem"
         , style "box-sizing" "border-box"
+        , style "min-width" "25rem"
         ]
         [ li []
             [ viewFileRaw (Idle Visible) Icon.git (text tree.name)

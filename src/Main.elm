@@ -3,11 +3,10 @@ module Main exposing (..)
 import Browser
 import Browser.Events exposing (onAnimationFrameDelta, onClick)
 import Browser.Navigation
-import FileTree exposing (Extension(..), File(..))
-import Html exposing (Html, button, div, text)
-import Html.Attributes exposing (style)
+import Deck exposing (Deck)
+import Html exposing (Html)
 import Json.Decode as Decoder
-import Slides exposing (Slides)
+import Slides exposing (slides)
 import Url
 
 
@@ -24,7 +23,7 @@ main =
 
 type alias Model =
     { navigationKey : Browser.Navigation.Key
-    , slides : Slides
+    , slides : Deck
     }
 
 
@@ -35,49 +34,7 @@ type alias Flags =
 init : Flags -> Url.Url -> Browser.Navigation.Key -> ( Model, Cmd Msg )
 init flags url key =
     ( { navigationKey = key
-      , slides =
-            Slides.init
-                { name = "unbreakable"
-                , files = []
-                }
-                [ { name = "unbreakable"
-                  , files =
-                        [ File "package.json" JSON
-                        , File "package-lock.json" JSON
-                        ]
-                  }
-                , { name = "unbreakable"
-                  , files =
-                        [ File "package.json" JSON
-                        , File "package-lock.json" JSON
-                        , File "webpack.config.js" JavaScript
-                        , File "index.html" HTML
-                        ]
-                  }
-                , { name = "unbreakable"
-                  , files =
-                        [ File "package.json" JSON
-                        , File "package-lock.json" JSON
-                        , File "webpack.config.js" JavaScript
-                        , File "index.html" HTML
-                        , Directory "src"
-                            [ File "App.jsx" JSX
-                            ]
-                        ]
-                  }
-                , { name = "unbreakable"
-                  , files =
-                        [ File "package.json" JSON
-                        , File "package-lock.json" JSON
-                        , File "webpack.config.js" JavaScript
-                        , File "index.html" HTML
-                        , Directory "src"
-                            [ File "App.jsx" JSX
-                            , File "Login.jsx" JSX
-                            ]
-                        ]
-                  }
-                ]
+      , slides = slides
       }
     , Cmd.none
     )
@@ -118,11 +75,11 @@ update msg model =
             ( model, Cmd.none )
 
         Clicked ->
-            ( { model | slides = Slides.next model.slides }, Cmd.none )
+            ( { model | slides = Deck.next model.slides }, Cmd.none )
 
         Tick delta ->
             ( { model
-                | slides = Slides.tick delta model.slides
+                | slides = Deck.tick delta model.slides
               }
             , Cmd.none
             )
@@ -166,12 +123,5 @@ update msg model =
 view : Model -> Browser.Document Msg
 view model =
     { title = "Making an unbreakable website"
-    , body =
-        [ Html.main_
-            [ style "padding" "10vh"
-            , style "height" "100vh"
-            , style "box-sizing" "border-box"
-            ]
-            [ FileTree.view <| Slides.current model.slides ]
-        ]
+    , body = [ Deck.view model.slides ]
     }

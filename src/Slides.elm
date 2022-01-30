@@ -1,54 +1,108 @@
-module Slides exposing (Slides, current, init, next, tick)
+module Slides exposing (slides)
 
-import Array
-import FileTree exposing (DisplayFileTree, FileTree)
-
-
-type Slides
-    = Slides
-        { deck : List FileTree
-        , current : Int
-        , currentSlide : FileTree
-        , currentDisplayedSlide : DisplayFileTree
-        }
+import Deck exposing (Deck)
+import Extension exposing (Extension(..))
+import File exposing (File(..))
+import FileTree exposing (File(..))
 
 
-init : FileTree -> List FileTree -> Slides
-init initialFileTree fileTrees =
-    Slides
-        { deck = initialFileTree :: fileTrees
-        , current = 0
-        , currentSlide = initialFileTree
-        , currentDisplayedSlide = FileTree.swap initialFileTree initialFileTree
-        }
-
-
-tick : Float -> Slides -> Slides
-tick delta (Slides slides) =
-    Slides
-        { slides
-            | currentDisplayedSlide = FileTree.tick delta slides.currentDisplayedSlide
-        }
-
-
-next : Slides -> Slides
-next (Slides slides) =
-    if slides.current < List.length slides.deck - 1 then
-        let
-            nextSlide =
-                Array.fromList slides.deck |> Array.get (slides.current + 1) |> Maybe.withDefault slides.currentSlide
-        in
-        Slides
-            { slides
-                | current = slides.current + 1
-                , currentSlide = nextSlide
-                , currentDisplayedSlide = FileTree.swap slides.currentSlide nextSlide
+slides : Deck
+slides =
+    Deck.init
+        ( { name = "unbreakable"
+          , files = []
+          }
+        , None
+        )
+        [ ( { name = "unbreakable"
+            , files =
+                [ File "package.json" JSON
+                , File "package-lock.json" JSON
+                ]
             }
+          , None
+          )
+        , ( { name = "unbreakable"
+            , files =
+                [ File "package.json" JSON
+                , File "package-lock.json" JSON
+                , File "webpack.config.js" JavaScript
+                , File "index.html" HTML
+                ]
+            }
+          , None
+          )
+        , ( { name = "unbreakable"
+            , files =
+                [ File "package.json" JSON
+                , File "package-lock.json" JSON
+                , File "webpack.config.js" JavaScript
+                , File "index.html" HTML
+                ]
+            }
+          , SelectedFile
+                { name = "webpack.config.js"
+                , extension = JavaScript
+                , content = """const path = require('path');
 
-    else
-        Slides slides
-
-
-current : Slides -> DisplayFileTree
-current (Slides slides) =
-    slides.currentDisplayedSlide
+module.exports = {
+  entry: './src/index.js',
+  output: {
+    path: path.resolve(__dirname, 'dist'),
+    filename: 'bundle.js',
+  },
+};"""
+                }
+          )
+        , ( { name = "unbreakable"
+            , files =
+                [ File "package.json" JSON
+                , File "package-lock.json" JSON
+                , File "webpack.config.js" JavaScript
+                , File "index.html" HTML
+                ]
+            }
+          , SelectedFile
+                { name = "index.html"
+                , extension = JavaScript
+                , content = """<!DOCTYPE html>
+<html>
+  <head>
+    <meta charset="utf-8" />
+    ...
+  </head>
+  <body>
+    ...
+    <script src="dist/bundle.js"></script>
+  </body>
+</html>"""
+                }
+          )
+        , ( { name = "unbreakable"
+            , files =
+                [ File "package.json" JSON
+                , File "package-lock.json" JSON
+                , File "webpack.config.js" JavaScript
+                , File "index.html" HTML
+                , Directory "src"
+                    [ File "App.jsx" JSX
+                    ]
+                ]
+            }
+          , None
+          )
+        , ( { name = "unbreakable"
+            , files =
+                [ File "package.json" JSON
+                , File "package-lock.json" JSON
+                , File "webpack.config.js" JavaScript
+                , File "index.html" HTML
+                , Directory "src"
+                    [ File "App.jsx" JSX
+                    , File "Login.jsx" JSX
+                    ]
+                ]
+            }
+          , None
+          )
+        ]
