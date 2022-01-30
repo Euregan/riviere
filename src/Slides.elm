@@ -1,6 +1,6 @@
 module Slides exposing (slides)
 
-import Deck exposing (Deck)
+import Deck exposing (Deck, Slide(..))
 import Extension exposing (Extension(..))
 import File exposing (File(..))
 import FileTree exposing (File(..))
@@ -9,38 +9,45 @@ import FileTree exposing (File(..))
 slides : Deck
 slides =
     Deck.init
-        ( { name = "unbreakable"
-          , files = []
-          }
-        , None
+        (Title
+            { title = "Making an unbreakable website" }
         )
-        [ ( { name = "unbreakable"
-            , files =
-                [ File "package.json" JSON
-                , File "package-lock.json" JSON
-                ]
-            }
-          , None
-          )
-        , ( { name = "unbreakable"
-            , files =
-                [ File "package.json" JSON
-                , File "package-lock.json" JSON
-                , File "webpack.config.js" JavaScript
-                , File "index.html" HTML
-                ]
-            }
-          , None
-          )
-        , ( { name = "unbreakable"
-            , files =
-                [ File "package.json" JSON
-                , File "package-lock.json" JSON
-                , File "webpack.config.js" JavaScript
-                , File "index.html" HTML
-                ]
-            }
-          , SelectedFile
+        [ Repository
+            ( { name = "unbreakable"
+              , files = []
+              }
+            , None
+            )
+        , Repository
+            ( { name = "unbreakable"
+              , files =
+                    [ File "package.json" JSON
+                    , File "package-lock.json" JSON
+                    ]
+              }
+            , None
+            )
+        , Repository
+            ( { name = "unbreakable"
+              , files =
+                    [ File "package.json" JSON
+                    , File "package-lock.json" JSON
+                    , File "webpack.config.js" JavaScript
+                    , File "index.html" HTML
+                    ]
+              }
+            , None
+            )
+        , Repository
+            ( { name = "unbreakable"
+              , files =
+                    [ File "package.json" JSON
+                    , File "package-lock.json" JSON
+                    , File "webpack.config.js" JavaScript
+                    , File "index.html" HTML
+                    ]
+              }
+            , SelectedFile
                 { name = "webpack.config.js"
                 , extension = JavaScript
                 , content = """const path = require('path');
@@ -53,16 +60,17 @@ module.exports = {
   },
 };"""
                 }
-          )
-        , ( { name = "unbreakable"
-            , files =
-                [ File "package.json" JSON
-                , File "package-lock.json" JSON
-                , File "webpack.config.js" JavaScript
-                , File "index.html" HTML
-                ]
-            }
-          , SelectedFile
+            )
+        , Repository
+            ( { name = "unbreakable"
+              , files =
+                    [ File "package.json" JSON
+                    , File "package-lock.json" JSON
+                    , File "webpack.config.js" JavaScript
+                    , File "index.html" HTML
+                    ]
+              }
+            , SelectedFile
                 { name = "index.html"
                 , extension = JavaScript
                 , content = """<!DOCTYPE html>
@@ -77,32 +85,34 @@ module.exports = {
   </body>
 </html>"""
                 }
-          )
-        , ( { name = "unbreakable"
-            , files =
-                [ File "package.json" JSON
-                , File "package-lock.json" JSON
-                , File "webpack.config.js" JavaScript
-                , File "index.html" HTML
-                , Directory "src"
-                    [ File "App.jsx" JSX
+            )
+        , Repository
+            ( { name = "unbreakable"
+              , files =
+                    [ File "package.json" JSON
+                    , File "package-lock.json" JSON
+                    , File "webpack.config.js" JavaScript
+                    , File "index.html" HTML
+                    , Directory "src"
+                        [ File "App.jsx" JSX
+                        ]
                     ]
-                ]
-            }
-          , None
-          )
-        , ( { name = "unbreakable"
-            , files =
-                [ File "package.json" JSON
-                , File "package-lock.json" JSON
-                , File "webpack.config.js" JavaScript
-                , File "index.html" HTML
-                , Directory "src"
-                    [ File "App.jsx" JSX
-                    , File "Login.jsx" JSX
+              }
+            , None
+            )
+        , Repository
+            ( { name = "unbreakable"
+              , files =
+                    [ File "package.json" JSON
+                    , File "package-lock.json" JSON
+                    , File "webpack.config.js" JavaScript
+                    , File "index.html" HTML
+                    , Directory "src"
+                        [ File "App.jsx" JSX
+                        , File "Login.jsx" JSX
+                        ]
                     ]
-                ]
-            }
-          , None
-          )
+              }
+            , None
+            )
         ]
