@@ -1,10 +1,11 @@
 module File exposing (DisplayFile, File(..), swap, tick, view)
 
 import Diff exposing (Change(..))
-import Extension exposing (Extension)
+import Extension exposing (Extension(..))
 import Html exposing (Html, code, div, pre, text)
 import Html.Attributes exposing (class, style)
 import Icon
+import SyntaxHighlight exposing (oneDark, toBlockHtml, useTheme)
 
 
 transitionDuration =
@@ -139,7 +140,6 @@ view (DisplayFile file) =
 
         typingTransitionLine : Transition String -> Maybe String
         typingTransitionLine transition =
-            -- Array.fromList slides.deck |> Array.get (slides.current + 1) |> Maybe.withDefault slides.currentSlide
             case transition of
                 Hidden ->
                     Nothing
@@ -155,6 +155,38 @@ view (DisplayFile file) =
 
                 Add percent line ->
                     Just <| String.left (percent * (String.length line |> toFloat) |> floor) line
+
+        currentExtension : Transition Extension -> Extension
+        currentExtension transition =
+            case transition of
+                Hidden ->
+                    JSON
+
+                Visible extension ->
+                    extension
+
+                Replace _ _ extension ->
+                    extension
+
+                Remove _ extension ->
+                    extension
+
+                Add _ extension ->
+                    extension
+
+        syntax extension =
+            case currentExtension extension of
+                JSON ->
+                    SyntaxHighlight.json
+
+                HTML ->
+                    SyntaxHighlight.xml
+
+                JSX ->
+                    SyntaxHighlight.javascript
+
+                JavaScript ->
+                    SyntaxHighlight.javascript
     in
     div
         [ style "background" "#21252b"
@@ -180,8 +212,11 @@ view (DisplayFile file) =
             , style "padding" "0"
             , style "background" "transparent"
             ]
-            [ code [ class "language-js", style "font-family" "FiraCode" ]
-                [ typingTransition file.content |> text ]
+            [ typingTransition file.content
+                |> syntax file.extension
+                |> Result.map (toBlockHtml (Just 1))
+                |> Result.withDefault
+                    (pre [] [ code [] [ typingTransition file.content |> text ] ])
             ]
         ]
 
