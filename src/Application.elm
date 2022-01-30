@@ -25,7 +25,7 @@ browserFrame url content =
             [ style "background" "#d3d3d1"
             , style "padding" "1.1rem 1.4rem"
             , style "display" "flex"
-            , style "gap" "1rem"
+            , style "gap" "1.5rem"
             , style "align-items" "center"
             ]
             [ div
@@ -58,6 +58,7 @@ browserFrame url content =
             , div
                 [ style "background" "white"
                 , style "padding" "0.3rem 0.5rem"
+                , style "border-radius" "0.3rem"
                 , style "flex-grow" "1"
                 ]
                 [ text url ]
