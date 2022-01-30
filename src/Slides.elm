@@ -119,4 +119,5 @@ module.exports = {
               }
             , None
             )
+        , Application <| FakeBrowser "https://unbreakable.com" <| Html.div [] [ Html.text "This is the content" ]
         ]
