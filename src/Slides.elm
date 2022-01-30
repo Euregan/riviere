@@ -10,7 +10,9 @@ slides : Deck
 slides =
     Deck.init
         (Title
-            { title = "Making an unbreakable website" }
+            { title = "Making an unbreakable website"
+            , subtitle = Just "Or how to avoid clientside errors"
+            }
         )
         [ Repository
             ( { name = "unbreakable"

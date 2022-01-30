@@ -1,11 +1,13 @@
 module Title exposing (DisplayTitle, Title, swap, tick, view)
 
-import Html exposing (Html, h1, text)
+import Html exposing (Html, div, h1, h2, text)
 import Html.Attributes exposing (class, style)
 
 
 type alias Title =
-    { title : String }
+    { title : String
+    , subtitle : Maybe String
+    }
 
 
 type DisplayTitle
@@ -13,8 +15,11 @@ type DisplayTitle
 
 
 view : DisplayTitle -> Html msg
-view (DisplayTitle { title }) =
-    h1 [] [ text title ]
+view (DisplayTitle { title, subtitle }) =
+    div []
+        [ h1 [] [ text title ]
+        , h2 [] [ subtitle |> Maybe.withDefault "" |> text ]
+        ]
 
 
 swap : Title -> Title -> DisplayTitle
