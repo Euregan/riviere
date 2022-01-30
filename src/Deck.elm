@@ -5,6 +5,7 @@ import File exposing (DisplayFile, File)
 import FileTree exposing (DisplayFileTree, FileTree)
 import Html exposing (Html, div, li, ul)
 import Html.Attributes exposing (style)
+import Repository exposing (DisplayRepository, Repository)
 import Title exposing (DisplayTitle, Title)
 
 
@@ -19,9 +20,9 @@ type Slide
 
 type DisplaySlide
     = IdleTitle DisplayTitle
-    | IdleRepository ( DisplayFileTree, DisplayFile )
-    | TitleToRepository Float DisplayTitle ( DisplayFileTree, DisplayFile )
-    | RepositoryToTitle Float ( DisplayFileTree, DisplayFile ) DisplayTitle
+    | IdleRepository DisplayRepository
+    | TitleToRepository Float DisplayTitle DisplayRepository
+    | RepositoryToTitle Float DisplayRepository DisplayTitle
 
 
 type Deck
@@ -47,27 +48,20 @@ init initialSlide slides =
 transitionSlide : Slide -> Slide -> DisplaySlide
 transitionSlide from to =
     case ( from, to ) of
-        ( Repository ( fromFileTree, fromFile ), Repository ( toFileTree, toFile ) ) ->
-            IdleRepository
-                ( FileTree.swap fromFileTree toFileTree
-                , File.swap fromFile toFile
-                )
+        ( Repository fromRepository, Repository toRepository ) ->
+            IdleRepository <| Repository.swap fromRepository toRepository
 
         ( Title fromTitle, Title toTitle ) ->
             IdleTitle <| Title.swap fromTitle toTitle
 
-        ( Title title, Repository ( fileTree, file ) ) ->
+        ( Title title, Repository repository ) ->
             TitleToRepository 0
                 (Title.swap title title)
-                ( FileTree.swap fileTree fileTree
-                , File.swap file file
-                )
+                (Repository.swap repository repository)
 
-        ( Repository ( fileTree, file ), Title title ) ->
+        ( Repository repository, Title title ) ->
             RepositoryToTitle 0
-                ( FileTree.swap fileTree fileTree
-                , File.swap file file
-                )
+                (Repository.swap repository repository)
                 (Title.swap title title)
 
 
@@ -77,34 +71,26 @@ tick delta (Deck slides) =
         tickSlide : DisplaySlide -> DisplaySlide
         tickSlide slide =
             case slide of
-                IdleRepository ( fileTree, file ) ->
-                    IdleRepository
-                        ( FileTree.tick delta fileTree
-                        , File.tick delta file
-                        )
+                IdleRepository repository ->
+                    IdleRepository (Repository.tick delta repository)
 
                 IdleTitle title ->
                     IdleTitle (Title.tick delta title)
 
-                TitleToRepository percent title ( fileTree, file ) ->
+                TitleToRepository percent title repository ->
                     if percent + (delta / transitionDuration) > 1 then
-                        IdleRepository
-                            ( FileTree.tick delta fileTree
-                            , File.tick delta file
-                            )
+                        IdleRepository (Repository.tick delta repository)
 
                     else
-                        TitleToRepository (percent + (delta / transitionDuration)) (Title.tick delta title) ( fileTree, file )
+                        TitleToRepository (percent + (delta / transitionDuration)) (Title.tick delta title) repository
 
-                RepositoryToTitle percent ( fileTree, file ) title ->
+                RepositoryToTitle percent repository title ->
                     if percent + (delta / transitionDuration) > 1 then
                         IdleTitle (Title.tick delta title)
 
                     else
                         RepositoryToTitle (percent + (delta / transitionDuration))
-                            ( FileTree.tick delta fileTree
-                            , File.tick delta file
-                            )
+                            (Repository.tick delta repository)
                             title
     in
     Deck
@@ -134,9 +120,9 @@ next (Deck slides) =
 view : Deck -> Html msg
 view (Deck slides) =
     let
-        transition : Float -> List (Html msg) -> List (Html msg) -> List (Html msg)
+        transition : Float -> Html msg -> Html msg -> Html msg
         transition percent from to =
-            [ ul
+            ul
                 [ style "width" "calc(100vw - 20vh)"
                 , style "height" "80vh"
                 , style "position" "relative"
@@ -147,65 +133,38 @@ view (Deck slides) =
                     , style "position" "absolute"
                     , style "left" <| String.fromFloat (percent * -100) ++ "%"
                     ]
-                    from
+                    [ from ]
                 , li
                     [ style "height" "100%"
                     , style "width" "100%"
                     , style "position" "absolute"
                     , style "left" <| String.fromFloat ((1 - percent) * 100) ++ "%"
                     ]
-                    to
+                    [ to ]
                 ]
-            ]
 
-        viewSlide : DisplaySlide -> List (Html msg)
+        viewSlide : DisplaySlide -> Html msg
         viewSlide slide =
             case slide of
-                IdleRepository ( fileTree, file ) ->
-                    [ div
-                        [ style "height" "100%"
-                        , style "display" "flex"
-                        , style "gap" "1rem"
-                        ]
-                        [ FileTree.view fileTree
-                        , File.view file
-                        ]
-                    ]
+                IdleRepository repository ->
+                    Repository.view repository
 
                 IdleTitle title ->
-                    [ Title.view title ]
+                    Title.view title
 
-                TitleToRepository percent title ( fileTree, file ) ->
+                TitleToRepository percent title repository ->
                     transition percent
-                        [ Title.view title
-                        ]
-                        [ div
-                            [ style "height" "100%"
-                            , style "display" "flex"
-                            , style "gap" "1rem"
-                            ]
-                            [ FileTree.view fileTree
-                            , File.view file
-                            ]
-                        ]
+                        (Title.view title)
+                        (Repository.view repository)
 
-                RepositoryToTitle percent ( fileTree, file ) title ->
+                RepositoryToTitle percent repository title ->
                     transition percent
-                        [ div
-                            [ style "height" "100%"
-                            , style "display" "flex"
-                            , style "gap" "1rem"
-                            ]
-                            [ FileTree.view fileTree
-                            , File.view file
-                            ]
-                        ]
-                        [ Title.view title
-                        ]
+                        (Repository.view repository)
+                        (Title.view title)
     in
     Html.main_
         [ style "padding" "10vh"
         , style "height" "100vh"
         , style "box-sizing" "border-box"
         ]
-        (viewSlide slides.currentDisplayedSlide)
+        [ viewSlide slides.currentDisplayedSlide ]
