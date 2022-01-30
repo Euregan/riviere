@@ -3,7 +3,7 @@ module Deck exposing (Deck, Slide(..), init, next, tick, view)
 import Array
 import File exposing (DisplayFile, File)
 import FileTree exposing (DisplayFileTree, FileTree)
-import Html exposing (Html, div)
+import Html exposing (Html, div, li, ul)
 import Html.Attributes exposing (style)
 import Title exposing (DisplayTitle, Title)
 
@@ -84,7 +84,7 @@ tick delta (Deck slides) =
                         )
 
                 IdleTitle title ->
-                    IdleTitle title
+                    IdleTitle (Title.tick delta title)
 
                 TitleToRepository percent title ( fileTree, file ) ->
                     if percent + (delta / transitionDuration) > 1 then
@@ -94,14 +94,18 @@ tick delta (Deck slides) =
                             )
 
                     else
-                        TitleToRepository (percent + (delta / transitionDuration)) title ( fileTree, file )
+                        TitleToRepository (percent + (delta / transitionDuration)) (Title.tick delta title) ( fileTree, file )
 
-                RepositoryToTitle percent repository title ->
+                RepositoryToTitle percent ( fileTree, file ) title ->
                     if percent + (delta / transitionDuration) > 1 then
-                        IdleTitle title
+                        IdleTitle (Title.tick delta title)
 
                     else
-                        RepositoryToTitle (percent + (delta / transitionDuration)) repository title
+                        RepositoryToTitle (percent + (delta / transitionDuration))
+                            ( FileTree.tick delta fileTree
+                            , File.tick delta file
+                            )
+                            title
     in
     Deck
         { slides
@@ -120,8 +124,7 @@ next (Deck slides) =
             { slides
                 | current = slides.current + 1
                 , currentSlide = futureSlide
-                , currentDisplayedSlide =
-                    transitionSlide slides.currentSlide futureSlide
+                , currentDisplayedSlide = transitionSlide slides.currentSlide futureSlide
             }
 
     else
@@ -131,28 +134,78 @@ next (Deck slides) =
 view : Deck -> Html msg
 view (Deck slides) =
     let
+        transition : Float -> List (Html msg) -> List (Html msg) -> List (Html msg)
+        transition percent from to =
+            [ ul
+                [ style "width" "calc(100vw - 20vh)"
+                , style "height" "80vh"
+                , style "position" "relative"
+                ]
+                [ li
+                    [ style "height" "100%"
+                    , style "width" "100%"
+                    , style "position" "absolute"
+                    , style "left" <| String.fromFloat (percent * -100) ++ "%"
+                    ]
+                    from
+                , li
+                    [ style "height" "100%"
+                    , style "width" "100%"
+                    , style "position" "absolute"
+                    , style "left" <| String.fromFloat ((1 - percent) * 100) ++ "%"
+                    ]
+                    to
+                ]
+            ]
+
         viewSlide : DisplaySlide -> List (Html msg)
         viewSlide slide =
             case slide of
                 IdleRepository ( fileTree, file ) ->
-                    [ FileTree.view fileTree
-                    , File.view file
+                    [ div
+                        [ style "height" "100%"
+                        , style "display" "flex"
+                        , style "gap" "1rem"
+                        ]
+                        [ FileTree.view fileTree
+                        , File.view file
+                        ]
                     ]
 
                 IdleTitle title ->
                     [ Title.view title ]
 
                 TitleToRepository percent title ( fileTree, file ) ->
-                    []
+                    transition percent
+                        [ Title.view title
+                        ]
+                        [ div
+                            [ style "height" "100%"
+                            , style "display" "flex"
+                            , style "gap" "1rem"
+                            ]
+                            [ FileTree.view fileTree
+                            , File.view file
+                            ]
+                        ]
 
                 RepositoryToTitle percent ( fileTree, file ) title ->
-                    []
+                    transition percent
+                        [ div
+                            [ style "height" "100%"
+                            , style "display" "flex"
+                            , style "gap" "1rem"
+                            ]
+                            [ FileTree.view fileTree
+                            , File.view file
+                            ]
+                        ]
+                        [ Title.view title
+                        ]
     in
     Html.main_
         [ style "padding" "10vh"
         , style "height" "100vh"
         , style "box-sizing" "border-box"
-        , style "display" "flex"
-        , style "gap" "1rem"
         ]
         (viewSlide slides.currentDisplayedSlide)

@@ -1,4 +1,4 @@
-module Title exposing (DisplayTitle, Title, swap, view)
+module Title exposing (DisplayTitle, Title, swap, tick, view)
 
 import Html exposing (Html, h1, text)
 import Html.Attributes exposing (class, style)
@@ -20,3 +20,8 @@ view (DisplayTitle { title }) =
 swap : Title -> Title -> DisplayTitle
 swap from to =
     DisplayTitle to
+
+
+tick : Float -> DisplayTitle -> DisplayTitle
+tick delta title =
+    title
