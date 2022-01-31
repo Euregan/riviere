@@ -76,7 +76,7 @@ module.exports = {
               }
             , SelectedFile
                 { name = "index.html"
-                , extension = JavaScript
+                , extension = HTML
                 , content = """<!DOCTYPE html>
 <html>
   <head>
