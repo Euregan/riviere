@@ -108,8 +108,20 @@ view (DisplayFile transition) =
                     )
 
                 Swap percent fromFile toFile ->
-                    ( rollingTransition (titleSize * (1 - percent)) (text fromFile.name)
-                    , rollingTransition (iconSize * (1 - percent)) (Extension.view fromFile.extension)
+                    ( div
+                        [ style "display" "flex"
+                        , style "flex-direction" "column"
+                        ]
+                        [ text fromFile.name
+                        , rollingTransition (titleSize * percent) (text toFile.name)
+                        ]
+                    , div
+                        [ style "display" "flex"
+                        , style "flex-direction" "column"
+                        ]
+                        [ Extension.view fromFile.extension
+                        , rollingTransition (iconSize * percent) (Extension.view toFile.extension)
+                        ]
                     , typingTransition percent toFile.content
                     )
 
@@ -121,7 +133,11 @@ view (DisplayFile transition) =
 
         rollingTransition : Float -> Html Message -> Html Message
         rollingTransition size element =
-            div [ style "height" (String.fromFloat size ++ "rem") ] [ element ]
+            div
+                [ style "height" (String.fromFloat size ++ "rem")
+                , style "overflow" "hidden"
+                ]
+                [ element ]
 
         typingTransition : Float -> String -> String
         typingTransition percent text =
