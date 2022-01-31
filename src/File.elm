@@ -15,168 +15,141 @@ transitionDuration =
 
 type File
     = None
-    | SelectedFile
-        { name : String
-        , extension : Extension
-        , content : String
-        }
+    | SelectedFile FileRecord
+
+
+type alias FileRecord =
+    { name : String
+    , extension : Extension
+    , content : String
+    }
 
 
 type DisplayFile
-    = DisplayFile
-        { name : Transition String
-        , extension : Transition Extension
-        , content : List (Transition String)
+    = DisplayFile Transition
+
+
+type Transition
+    = Open Float FileRecord
+    | Close Float FileRecord
+    | Swap Float FileRecord FileRecord
+    | Edit
+        Float
+        { name : String
+        , extension : Extension
+        , content : List (Change String)
         }
-
-
-type Transition a
-    = Replace Float a a
-    | Remove Float a
-    | Add Float a
-    | Visible a
+    | Visible FileRecord
     | Hidden
 
 
 swap : File -> File -> DisplayFile
 swap from to =
     let
+        diff : String -> String -> List (Change String)
         diff fromContent toContent =
             Diff.diffLines fromContent toContent
-                |> List.map
-                    (\change ->
-                        case change of
-                            Added line ->
-                                Add 0 line
 
-                            Removed line ->
-                                Remove 0 line
+        hasDiff : Change String -> Bool
+        hasDiff changes =
+            True
 
-                            NoChange line ->
-                                Visible line
-                    )
-
-        ( n, e, c ) =
+        displayFile : Transition
+        displayFile =
             case ( from, to ) of
                 ( None, None ) ->
-                    ( Hidden
-                    , Hidden
-                    , []
-                    )
+                    Hidden
 
-                ( None, SelectedFile { name, extension, content } ) ->
-                    ( Add 0 name
-                    , Add 0 extension
-                    , diff "" content
-                    )
+                ( None, SelectedFile file ) ->
+                    Open 0 file
 
-                ( SelectedFile { name, extension, content }, None ) ->
-                    ( Remove 0 name
-                    , Remove 0 extension
-                    , diff content ""
-                    )
+                ( SelectedFile file, None ) ->
+                    Close 0 file
 
                 ( SelectedFile fromFile, SelectedFile toFile ) ->
-                    ( Replace 0 fromFile.name toFile.name
-                    , Replace 0 fromFile.extension toFile.extension
-                    , diff fromFile.content toFile.content
-                    )
+                    Swap 0 fromFile toFile
     in
-    DisplayFile
-        { name = n
-        , extension = e
-        , content = c
-        }
+    DisplayFile displayFile
 
 
 view : DisplayFile -> Html Message
-view (DisplayFile file) =
+view (DisplayFile transition) =
     let
-        rollingTransition : Transition a -> Float -> (a -> Html Message) -> Html Message
-        rollingTransition transition size viewTransition =
+        iconSize =
+            1
+
+        titleSize =
+            1.25
+
+        ( name, extension, content ) =
             case transition of
                 Hidden ->
-                    div [] []
-
-                Visible element ->
-                    div [ style "height" (String.fromFloat size ++ "rem") ] [ viewTransition element ]
-
-                Replace percent oldElement newElement ->
-                    div
-                        [ style "display" "flex"
-                        , style "flex-direction" "column"
-                        ]
-                        [ div
-                            [ style "height" (String.fromFloat ((1 - percent) * size) ++ "rem")
-                            , style "overflow" "hidden"
-                            ]
-                            [ viewTransition oldElement ]
-                        , div
-                            [ style "height" (String.fromFloat (percent * size) ++ "rem")
-                            , style "overflow" "hidden"
-                            ]
-                            [ viewTransition newElement ]
-                        ]
-
-                Remove percent element ->
-                    div [ style "height" (String.fromFloat ((1 - percent) * size) ++ "rem") ] [ viewTransition element ]
-
-                Add percent element ->
-                    div [ style "height" (String.fromFloat (percent * size) ++ "rem") ] [ viewTransition element ]
-
-        typingTransition : List (Transition String) -> String
-        typingTransition lines =
-            List.map typingTransitionLine lines
-                |> List.foldr
-                    (\maybeLine content ->
-                        case maybeLine of
-                            Just line ->
-                                line :: content
-
-                            Nothing ->
-                                content
+                    ( text ""
+                    , text ""
+                    , ""
                     )
-                    []
-                |> String.join "\n"
 
-        typingTransitionLine : Transition String -> Maybe String
-        typingTransitionLine transition =
-            case transition of
-                Hidden ->
-                    Nothing
+                Visible file ->
+                    ( rollingTransition titleSize (text file.name)
+                    , rollingTransition iconSize (Extension.view file.extension)
+                    , file.content
+                    )
 
-                Visible line ->
-                    Just line
+                Open percent file ->
+                    ( rollingTransition (titleSize * percent) (text file.name)
+                    , rollingTransition (iconSize * percent) (Extension.view file.extension)
+                    , typingTransition percent file.content
+                    )
 
-                Replace percent oldLine newLine ->
-                    Just newLine
+                Close percent file ->
+                    ( rollingTransition (titleSize * (1 - percent)) (text file.name)
+                    , rollingTransition (iconSize * (1 - percent)) (Extension.view file.extension)
+                    , typingTransition (1 - percent) file.content
+                    )
 
-                Remove percent line ->
-                    Just <| String.left ((1 - percent) * (String.length line |> toFloat) |> floor) line
+                Swap percent fromFile toFile ->
+                    ( rollingTransition (titleSize * (1 - percent)) (text fromFile.name)
+                    , rollingTransition (iconSize * (1 - percent)) (Extension.view fromFile.extension)
+                    , typingTransition percent toFile.content
+                    )
 
-                Add percent line ->
-                    Just <| String.left (percent * (String.length line |> toFloat) |> floor) line
+                Edit percent file ->
+                    ( rollingTransition titleSize (text file.name)
+                    , rollingTransition iconSize (Extension.view file.extension)
+                    , ""
+                    )
 
-        currentExtension : Transition Extension -> Extension
-        currentExtension transition =
-            case transition of
-                Hidden ->
-                    JSON
+        rollingTransition : Float -> Html Message -> Html Message
+        rollingTransition size element =
+            div [ style "height" (String.fromFloat size ++ "rem") ] [ element ]
 
-                Visible extension ->
-                    extension
+        typingTransition : Float -> String -> String
+        typingTransition percent text =
+            String.left (round (percent * toFloat (String.length text))) text
 
-                Replace _ _ extension ->
-                    extension
+        syntax trans =
+            let
+                ext =
+                    case trans of
+                        Open _ file ->
+                            file.extension
 
-                Remove _ extension ->
-                    extension
+                        Close _ file ->
+                            file.extension
 
-                Add _ extension ->
-                    extension
+                        Swap _ fromFile toFile ->
+                            toFile.extension
 
-        syntax extension =
-            case currentExtension extension of
+                        Edit _ file ->
+                            file.extension
+
+                        Visible file ->
+                            file.extension
+
+                        Hidden ->
+                            JSON
+            in
+            case ext of
                 JSON ->
                     SyntaxHighlight.json
 
@@ -207,57 +180,75 @@ view (DisplayFile file) =
             , style "fill" "#9da5b4"
             , style "height" "1.25rem"
             ]
-            [ rollingTransition file.extension 1 Extension.view, rollingTransition file.name 1.25 text ]
+            [ extension, name ]
         , pre
             [ style "margin" "0"
             , style "padding" "0"
             , style "background" "transparent"
             ]
-            [ typingTransition file.content
-                |> syntax file.extension
+            [ content
+                |> syntax transition
                 |> Result.map (toBlockHtml (Just 1))
                 |> Result.withDefault
-                    (pre [] [ code [] [ typingTransition file.content |> text ] ])
+                    (pre [] [ code [] [ text content ] ])
             ]
         ]
 
 
 tick : Float -> DisplayFile -> DisplayFile
-tick delta (DisplayFile file) =
+tick delta (DisplayFile transition) =
     let
-        tickTransition : Transition a -> Transition a
-        tickTransition transition =
+        updatedTransition =
             case transition of
-                Hidden ->
-                    Hidden
-
-                Visible element ->
-                    Visible element
-
-                Replace percent from to ->
+                Open percent file ->
                     if percent + (delta / transitionDuration) > 1 then
-                        Visible to
+                        Visible file
 
                     else
-                        Replace (percent + (delta / transitionDuration)) from to
+                        Open (percent + (delta / transitionDuration)) file
 
-                Remove percent element ->
+                Close percent file ->
                     if percent + (delta / transitionDuration) > 1 then
                         Hidden
 
                     else
-                        Remove (percent + (delta / transitionDuration)) element
+                        Close (percent + (delta / transitionDuration)) file
 
-                Add percent element ->
+                Swap percent fromFile toFile ->
                     if percent + (delta / transitionDuration) > 1 then
-                        Visible element
+                        Visible toFile
 
                     else
-                        Add (percent + (delta / transitionDuration)) element
+                        Swap (percent + (delta / transitionDuration)) fromFile toFile
+
+                Edit percent file ->
+                    if percent + (delta / transitionDuration) > 1 then
+                        let
+                            finalizedContent =
+                                List.foldl
+                                    (\curr acc ->
+                                        case curr of
+                                            Added line ->
+                                                acc ++ "\n" ++ line
+
+                                            Removed _ ->
+                                                acc
+
+                                            NoChange line ->
+                                                acc ++ "\n" ++ line
+                                    )
+                                    ""
+                                    file.content
+                        in
+                        Visible { name = file.name, extension = file.extension, content = finalizedContent }
+
+                    else
+                        Edit (percent + (delta / transitionDuration)) file
+
+                Visible file ->
+                    Visible file
+
+                Hidden ->
+                    Hidden
     in
-    DisplayFile
-        { file
-            | name = tickTransition file.name
-            , extension = tickTransition file.extension
-            , content = List.map tickTransition file.content
-        }
+    DisplayFile updatedTransition
