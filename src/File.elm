@@ -67,7 +67,15 @@ swap from to =
                     Close 0 file
 
                 ( SelectedFile fromFile, SelectedFile toFile ) ->
-                    Swap 0 fromFile toFile
+                    if fromFile.name == toFile.name && fromFile.extension == toFile.extension then
+                        Edit 0
+                            { name = toFile.name
+                            , extension = toFile.extension
+                            , content = Diff.diffLines fromFile.content toFile.content
+                            }
+
+                    else
+                        Swap 0 fromFile toFile
     in
     DisplayFile displayFile
 
@@ -126,9 +134,26 @@ view (DisplayFile transition) =
                     )
 
                 Edit percent file ->
+                    let
+                        finalizedContent =
+                            List.foldl
+                                (\curr acc ->
+                                    case curr of
+                                        Added line ->
+                                            acc ++ "\n" ++ typingTransition percent line
+
+                                        Removed line ->
+                                            acc ++ "\n" ++ typingTransition (1 - percent) line
+
+                                        NoChange line ->
+                                            acc ++ "\n" ++ line
+                                )
+                                ""
+                                file.content
+                    in
                     ( rollingTransition titleSize (text file.name)
                     , rollingTransition iconSize (Extension.view file.extension)
-                    , ""
+                    , finalizedContent
                     )
 
         rollingTransition : Float -> Html Message -> Html Message
