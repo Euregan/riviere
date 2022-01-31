@@ -1,7 +1,12 @@
-module Message exposing (Message(..))
+module Message exposing (Key(..), Message(..))
 
 import Browser
 import Url
+
+
+type Key
+    = ArrowLeft
+    | Other
 
 
 type Message
@@ -9,3 +14,4 @@ type Message
     | UrlChanged Url.Url
     | Clicked
     | Tick Float
+    | KeyPressed Key

@@ -1,12 +1,12 @@
 module Main exposing (..)
 
 import Browser
-import Browser.Events exposing (onAnimationFrameDelta, onClick)
+import Browser.Events exposing (onAnimationFrameDelta, onClick, onKeyDown)
 import Browser.Navigation
 import Deck exposing (Deck)
 import Html exposing (Html)
 import Json.Decode as Decoder
-import Message exposing (Message(..))
+import Message exposing (Key(..), Message(..))
 import Slides exposing (slides)
 import Url
 
@@ -41,11 +41,27 @@ init flags url key =
     )
 
 
+keyDecoder : Decoder.Decoder Key
+keyDecoder =
+    Decoder.map toKey (Decoder.field "key" Decoder.string)
+
+
+toKey : String -> Key
+toKey string =
+    case string of
+        "ArrowLeft" ->
+            ArrowLeft
+
+        _ ->
+            Other
+
+
 subscriptions : Model -> Sub Message
 subscriptions model =
     Sub.batch
         [ onClick <| Decoder.succeed Clicked
         , onAnimationFrameDelta Tick
+        , onKeyDown <| Decoder.map KeyPressed keyDecoder
         ]
 
 
@@ -70,6 +86,18 @@ update message model =
 
         Clicked ->
             ( { model | slides = Deck.next model.slides }, Cmd.none )
+
+        KeyPressed key ->
+            ( { model
+                | slides =
+                    if key == ArrowLeft then
+                        Deck.previous model.slides
+
+                    else
+                        Deck.next model.slides
+              }
+            , Cmd.none
+            )
 
         Tick delta ->
             ( { model

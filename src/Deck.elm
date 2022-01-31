@@ -1,4 +1,4 @@
-module Deck exposing (Deck, Slide(..), init, next, tick, view)
+module Deck exposing (Deck, Slide(..), init, next, previous, tick, view)
 
 import Application exposing (Application, DisplayApplication)
 import Array
@@ -181,6 +181,24 @@ next (Deck slides) =
         Deck
             { slides
                 | current = slides.current + 1
+                , currentSlide = futureSlide
+                , currentDisplayedSlide = transitionSlide slides.currentSlide futureSlide
+            }
+
+    else
+        Deck slides
+
+
+previous : Deck -> Deck
+previous (Deck slides) =
+    if slides.current > 0 then
+        let
+            futureSlide =
+                Array.fromList slides.deck |> Array.get (slides.current - 1) |> Maybe.withDefault slides.currentSlide
+        in
+        Deck
+            { slides
+                | current = slides.current - 1
                 , currentSlide = futureSlide
                 , currentDisplayedSlide = transitionSlide slides.currentSlide futureSlide
             }
