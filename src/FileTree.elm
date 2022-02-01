@@ -177,6 +177,8 @@ view tree =
         , style "padding" "2rem"
         , style "box-sizing" "border-box"
         , style "min-width" "25rem"
+        , style "border-radius" "0.6rem"
+        , style "box-shadow" "rgba(149, 157, 165, 0.2) 0px 8px 24px"
         ]
         [ li []
             [ viewFileRaw (Idle Visible) Icon.git (text tree.name)

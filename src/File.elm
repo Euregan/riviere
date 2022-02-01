@@ -210,6 +210,8 @@ view (DisplayFile transition) =
         , style "display" "flex"
         , style "flex-direction" "column"
         , style "gap" "3rem"
+        , style "border-radius" "0.6rem"
+        , style "box-shadow" "rgba(149, 157, 165, 0.2) 0px 8px 24px"
         ]
         [ div
             [ style "display" "flex"
