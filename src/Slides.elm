@@ -6,6 +6,7 @@ import Extension exposing (Extension(..))
 import File exposing (File(..))
 import FileTree exposing (File(..))
 import Html
+import Terminal exposing (Color(..), Line(..))
 
 
 slides : Deck
@@ -119,5 +120,6 @@ module.exports = {
               }
             , None
             )
+        , Terminal ( "valentin", [ Command [ ( Default, "yarn build" ) ] ] )
         , Application <| FakeBrowser "https://unbreakable.com" <| Html.div [] [ Html.text "This is the content" ]
         ]
