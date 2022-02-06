@@ -6,6 +6,8 @@ import Url
 
 type Key
     = ArrowLeft
+    | ArrowRight
+    | Space
     | Other
 
 

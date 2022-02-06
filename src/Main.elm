@@ -52,6 +52,12 @@ toKey string =
         "ArrowLeft" ->
             ArrowLeft
 
+        "ArrowRight" ->
+            ArrowRight
+
+        " " ->
+            Space
+
         _ ->
             Other
 
@@ -90,11 +96,18 @@ update message model =
         KeyPressed key ->
             ( { model
                 | slides =
-                    if key == ArrowLeft then
-                        Deck.previous model.slides
+                    case key of
+                        ArrowLeft ->
+                            Deck.previous model.slides
 
-                    else
-                        Deck.next model.slides
+                        ArrowRight ->
+                            Deck.next model.slides
+
+                        Space ->
+                            Deck.next model.slides
+
+                        Other ->
+                            model.slides
               }
             , Cmd.none
             )
