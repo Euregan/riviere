@@ -1,12 +1,13 @@
 module Application exposing (Application(..), DisplayApplication, swap, tick, view)
 
-import Html exposing (Html, div, text)
+import Html exposing (Html, div, li, text, ul)
 import Html.Attributes exposing (style)
 import Message exposing (Message)
 
 
 type Application
     = FakeBrowser String (Html Message)
+    | FakeBrowserWithConsole String (Html Message) (List String)
 
 
 type DisplayApplication
@@ -20,6 +21,8 @@ browserFrame url content =
         , style "overflow" "hidden"
         , style "box-shadow" "rgba(149, 157, 165, 0.2) 0px 8px 24px"
         , style "height" "100%"
+        , style "display" "flex"
+        , style "flex-direction" "column"
         ]
         [ div
             [ style "background" "#d3d3d1"
@@ -63,9 +66,44 @@ browserFrame url content =
                 ]
                 [ text url ]
             ]
-        , div [ style "padding" "4rem" ]
+        , div
+            [ style "padding" "4rem"
+            , style "flex-grow" "1"
+            ]
             [ content ]
         ]
+
+
+browserFrameWithConsole : String -> Html Message -> List String -> Html Message
+browserFrameWithConsole url content errors =
+    browserFrame url <|
+        div
+            [ style "display" "flex"
+            , style "margin" "-4rem"
+            , style "height" "calc(100% + 8rem)"
+            ]
+            [ div
+                [ style "padding" "4rem"
+                , style "flex-grow" "1"
+                ]
+                [ content ]
+            , ul
+                [ style "border-left" "1px lightgray solid"
+                , style "width" "30%"
+                ]
+              <|
+                List.map
+                    (\error ->
+                        li
+                            [ style "color" "red"
+                            , style "background" "bisque"
+                            , style "padding" "1rem"
+                            , style "width" "100%"
+                            ]
+                            [ text error ]
+                    )
+                    errors
+            ]
 
 
 view : DisplayApplication -> Html Message
@@ -73,6 +111,9 @@ view (DisplayApplication application) =
     case application of
         FakeBrowser url content ->
             browserFrame url content
+
+        FakeBrowserWithConsole url content errors ->
+            browserFrameWithConsole url content errors
 
 
 swap : Application -> Application -> DisplayApplication

@@ -122,4 +122,5 @@ module.exports = {
             )
         , Terminal ( "valentin", [ Command [ ( Default, "yarn build" ) ] ] )
         , Application <| FakeBrowser "https://unbreakable.com" <| Html.div [] [ Html.text "This is the content" ]
+        , Application <| FakeBrowserWithConsole "https://unbreakable.com" (Html.div [] [ Html.text "This is the content, but there is an error" ]) [ "oh no :( TypeError" ]
         ]
