@@ -8,6 +8,7 @@ import Svg exposing (Svg)
 type Extension
     = JSON
     | JSX
+    | TSX
     | JavaScript
     | HTML
 
@@ -20,6 +21,9 @@ view icon =
 
         JSX ->
             Icon.jsx
+
+        TSX ->
+            Icon.tsx
 
         JavaScript ->
             Icon.javascript

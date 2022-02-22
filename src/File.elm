@@ -200,6 +200,9 @@ view (DisplayFile transition) =
                 JSX ->
                     SyntaxHighlight.javascript
 
+                TSX ->
+                    SyntaxHighlight.javascript
+
                 JavaScript ->
                     SyntaxHighlight.javascript
     in
