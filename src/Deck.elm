@@ -9,7 +9,7 @@ import Html.Attributes exposing (style)
 import Message exposing (Message)
 import Repository exposing (DisplayRepository, Repository)
 import Terminal exposing (DisplayTerminal, Terminal)
-import Title exposing (DisplayTitle, Title)
+import Text exposing (DisplayText, Text)
 
 
 transitionDuration =
@@ -17,7 +17,7 @@ transitionDuration =
 
 
 type Slide
-    = Title Title
+    = Text Text
     | Terminal Terminal
     | Repository Repository
     | Application Application
@@ -27,19 +27,19 @@ type DisplaySlide
     = IdleApplication DisplayApplication
     | ApplicationToRepository Float DisplayApplication DisplayRepository
     | ApplicationToTerminal Float DisplayApplication DisplayTerminal
-    | ApplicationToTitle Float DisplayApplication DisplayTitle
+    | ApplicationToText Float DisplayApplication DisplayText
     | IdleRepository DisplayRepository
     | RepositoryToApplication Float DisplayRepository DisplayApplication
     | RepositoryToTerminal Float DisplayRepository DisplayTerminal
-    | RepositoryToTitle Float DisplayRepository DisplayTitle
+    | RepositoryToText Float DisplayRepository DisplayText
     | IdleTerminal DisplayTerminal
     | TerminalToApplication Float DisplayTerminal DisplayApplication
     | TerminalToRepository Float DisplayTerminal DisplayRepository
-    | TerminalToTitle Float DisplayTerminal DisplayTitle
-    | IdleTitle DisplayTitle
-    | TitleToApplication Float DisplayTitle DisplayApplication
-    | TitleToRepository Float DisplayTitle DisplayRepository
-    | TitleToTerminal Float DisplayTitle DisplayTerminal
+    | TerminalToText Float DisplayTerminal DisplayText
+    | IdleText DisplayText
+    | TextToApplication Float DisplayText DisplayApplication
+    | TextToRepository Float DisplayText DisplayRepository
+    | TextToTerminal Float DisplayText DisplayTerminal
 
 
 type Deck
@@ -78,10 +78,10 @@ transitionSlide from to =
                 (Application.swap application application)
                 (Terminal.swap terminal terminal)
 
-        ( Application application, Title title ) ->
-            ApplicationToTitle 0
+        ( Application application, Text text ) ->
+            ApplicationToText 0
                 (Application.swap application application)
-                (Title.swap title title)
+                (Text.swap text text)
 
         ( Repository fromRepository, Repository toRepository ) ->
             IdleRepository <| Repository.swap fromRepository toRepository
@@ -96,10 +96,10 @@ transitionSlide from to =
                 (Repository.swap repository repository)
                 (Terminal.swap terminal terminal)
 
-        ( Repository repository, Title title ) ->
-            RepositoryToTitle 0
+        ( Repository repository, Text text ) ->
+            RepositoryToText 0
                 (Repository.swap repository repository)
-                (Title.swap title title)
+                (Text.swap text text)
 
         ( Terminal fromTerminal, Terminal toTerminal ) ->
             IdleTerminal <| Terminal.swap fromTerminal toTerminal
@@ -109,32 +109,32 @@ transitionSlide from to =
                 (Terminal.swap terminal terminal)
                 (Repository.swap repository repository)
 
-        ( Terminal terminal, Title title ) ->
-            TerminalToTitle 0
+        ( Terminal terminal, Text text ) ->
+            TerminalToText 0
                 (Terminal.swap terminal terminal)
-                (Title.swap title title)
+                (Text.swap text text)
 
         ( Terminal terminal, Application application ) ->
             TerminalToApplication 0
                 (Terminal.swap terminal terminal)
                 (Application.swap application application)
 
-        ( Title fromTitle, Title toTitle ) ->
-            IdleTitle <| Title.swap fromTitle toTitle
+        ( Text fromText, Text toText ) ->
+            IdleText <| Text.swap fromText toText
 
-        ( Title title, Application application ) ->
-            TitleToApplication 0
-                (Title.swap title title)
+        ( Text text, Application application ) ->
+            TextToApplication 0
+                (Text.swap text text)
                 (Application.swap application application)
 
-        ( Title title, Repository repository ) ->
-            TitleToRepository 0
-                (Title.swap title title)
+        ( Text text, Repository repository ) ->
+            TextToRepository 0
+                (Text.swap text text)
                 (Repository.swap repository repository)
 
-        ( Title title, Terminal terminal ) ->
-            TitleToTerminal 0
-                (Title.swap title title)
+        ( Text text, Terminal terminal ) ->
+            TextToTerminal 0
+                (Text.swap text text)
                 (Terminal.swap terminal terminal)
 
 
@@ -165,14 +165,14 @@ tick delta (Deck slides) =
                             (Application.tick delta application)
                             terminal
 
-                ApplicationToTitle percent application title ->
+                ApplicationToText percent application text ->
                     if percent + (delta / transitionDuration) > 1 then
-                        IdleTitle (Title.tick delta title)
+                        IdleText (Text.tick delta text)
 
                     else
-                        ApplicationToTitle (percent + (delta / transitionDuration))
+                        ApplicationToText (percent + (delta / transitionDuration))
                             (Application.tick delta application)
-                            title
+                            text
 
                 IdleRepository repository ->
                     IdleRepository (Repository.tick delta repository)
@@ -195,14 +195,14 @@ tick delta (Deck slides) =
                             (Repository.tick delta repository)
                             terminal
 
-                RepositoryToTitle percent repository title ->
+                RepositoryToText percent repository text ->
                     if percent + (delta / transitionDuration) > 1 then
-                        IdleTitle (Title.tick delta title)
+                        IdleText (Text.tick delta text)
 
                     else
-                        RepositoryToTitle (percent + (delta / transitionDuration))
+                        RepositoryToText (percent + (delta / transitionDuration))
                             (Repository.tick delta repository)
-                            title
+                            text
 
                 IdleTerminal terminal ->
                     IdleTerminal (Terminal.tick delta terminal)
@@ -225,43 +225,43 @@ tick delta (Deck slides) =
                             (Terminal.tick delta terminal)
                             repository
 
-                TerminalToTitle percent terminal title ->
+                TerminalToText percent terminal text ->
                     if percent + (delta / transitionDuration) > 1 then
-                        IdleTitle (Title.tick delta title)
+                        IdleText (Text.tick delta text)
 
                     else
-                        TerminalToTitle (percent + (delta / transitionDuration))
+                        TerminalToText (percent + (delta / transitionDuration))
                             (Terminal.tick delta terminal)
-                            title
+                            text
 
-                IdleTitle title ->
-                    IdleTitle (Title.tick delta title)
+                IdleText text ->
+                    IdleText (Text.tick delta text)
 
-                TitleToApplication percent title application ->
+                TextToApplication percent text application ->
                     if percent + (delta / transitionDuration) > 1 then
                         IdleApplication (Application.tick delta application)
 
                     else
-                        TitleToApplication (percent + (delta / transitionDuration))
-                            (Title.tick delta title)
+                        TextToApplication (percent + (delta / transitionDuration))
+                            (Text.tick delta text)
                             application
 
-                TitleToRepository percent title repository ->
+                TextToRepository percent text repository ->
                     if percent + (delta / transitionDuration) > 1 then
                         IdleRepository (Repository.tick delta repository)
 
                     else
-                        TitleToRepository (percent + (delta / transitionDuration))
-                            (Title.tick delta title)
+                        TextToRepository (percent + (delta / transitionDuration))
+                            (Text.tick delta text)
                             repository
 
-                TitleToTerminal percent title terminal ->
+                TextToTerminal percent text terminal ->
                     if percent + (delta / transitionDuration) > 1 then
                         IdleTerminal (Terminal.tick delta terminal)
 
                     else
-                        TitleToTerminal (percent + (delta / transitionDuration))
-                            (Title.tick delta title)
+                        TextToTerminal (percent + (delta / transitionDuration))
+                            (Text.tick delta text)
                             terminal
     in
     Deck
@@ -348,10 +348,10 @@ view (Deck slides) =
                         (Application.view application)
                         (Terminal.view terminal)
 
-                ApplicationToTitle percent application title ->
+                ApplicationToText percent application text ->
                     transition percent
                         (Application.view application)
-                        (Title.view title)
+                        (Text.view text)
 
                 IdleRepository repository ->
                     Repository.view repository
@@ -366,13 +366,13 @@ view (Deck slides) =
                         (Repository.view repository)
                         (Terminal.view terminal)
 
-                RepositoryToTitle percent repository title ->
+                RepositoryToText percent repository text ->
                     transition percent
                         (Repository.view repository)
-                        (Title.view title)
+                        (Text.view text)
 
-                IdleTerminal title ->
-                    Terminal.view title
+                IdleTerminal text ->
+                    Terminal.view text
 
                 TerminalToApplication percent terminal application ->
                     transition percent
@@ -384,27 +384,27 @@ view (Deck slides) =
                         (Terminal.view terminal)
                         (Repository.view repository)
 
-                TerminalToTitle percent terminal title ->
+                TerminalToText percent terminal text ->
                     transition percent
                         (Terminal.view terminal)
-                        (Title.view title)
+                        (Text.view text)
 
-                IdleTitle title ->
-                    Title.view title
+                IdleText text ->
+                    Text.view text
 
-                TitleToApplication percent title application ->
+                TextToApplication percent text application ->
                     transition percent
-                        (Title.view title)
+                        (Text.view text)
                         (Application.view application)
 
-                TitleToRepository percent title repository ->
+                TextToRepository percent text repository ->
                     transition percent
-                        (Title.view title)
+                        (Text.view text)
                         (Repository.view repository)
 
-                TitleToTerminal percent title terminal ->
+                TextToTerminal percent text terminal ->
                     transition percent
-                        (Title.view title)
+                        (Text.view text)
                         (Terminal.view terminal)
     in
     Html.main_
