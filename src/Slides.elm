@@ -56,26 +56,10 @@ slides =
                     [ "Je vais parler du front"
                     , "Je ne couvrirai pas certains problèmes"
                     , "Il y a des problèmes ingérables"
-                    , "Oui, il y aura des désavantages"
-                    ]
-                }
-        , Deck.Text <|
-            Text.Text
-                { title = "DISCLAIMER"
-                , content =
-                    [ "Je vais parler du front"
-                    , "Je ne couvrirai pas certains problèmes"
-                    , "Il y a des problèmes ingérables"
-                    , "Oui, il y aura des désavantages"
-                    , "Oui, il y aura du code approximatif 😬"
+                    , "Il y aura du code approximatif 😬"
                     ]
                 }
         , Application <| FakeBrowser "https://unbreakable.com" GenealogyTree.display
-        , Deck.Text <|
-            Title
-                { title = "Assister l'humain"
-                , subtitle = Nothing
-                }
         , Repository
             ( { name = "unbreakable"
               , files = []
@@ -217,31 +201,6 @@ const App = () => {
                     ]
               }
             , SelectedFile
-                { name = "Person.jsx"
-                , extension = JSX
-                , content = """import PropTypes from 'prop-types'
-
-const Person = ({person}) => <div><img src={person.picture}/>{person.name}</div>
-
-Person.propTypes = {
-  name: PropTypes.string,
-  picture: PropTypes.string
-}"""
-                }
-            )
-        , Repository
-            ( { name = "unbreakable"
-              , files =
-                    [ File "package.json" JSON
-                    , File "package-lock.json" JSON
-                    , File "webpack.config.js" JavaScript
-                    , Directory "src"
-                        [ File "App.jsx" JSX
-                        , File "Person.jsx" JSX
-                        ]
-                    ]
-              }
-            , SelectedFile
                 { name = "App.jsx"
                 , extension = JSX
                 , content = """import { useState, useEffect } from 'react'
@@ -263,6 +222,82 @@ const App = () => {
       <Person person={person} />
     ...
   </div>
+}"""
+                }
+            )
+        , Repository
+            ( { name = "unbreakable"
+              , files =
+                    [ File "package.json" JSON
+                    , File "package-lock.json" JSON
+                    , File "webpack.config.js" JavaScript
+                    , Directory "src"
+                        [ File "App.jsx" JSX
+                        , File "Person.jsx" JSX
+                        ]
+                    ]
+              }
+            , SelectedFile
+                { name = "App.jsx"
+                , extension = JSX
+                , content = """import useSWR from 'swr'
+
+const App = () => {
+  const { data: tree, error } = useSWR(...)
+
+  if (error) return <div>oh no</div>
+  if (!tree) return <div>Récupération de votre généalogie...</div>
+
+  const addParent = () => {...}
+
+  return <div>
+    ...
+      <Person person={person} />
+    ...
+  </div>
+}"""
+                }
+            )
+        , Repository
+            ( { name = "unbreakable"
+              , files =
+                    [ File "package.json" JSON
+                    , File "package-lock.json" JSON
+                    , File "webpack.config.js" JavaScript
+                    , Directory "src"
+                        [ File "App.jsx" JSX
+                        , File "Person.jsx" JSX
+                        ]
+                    ]
+              }
+            , SelectedFile
+                { name = "Person.jsx"
+                , extension = JSX
+                , content = """const Person = ({person}) => <div><img src={person.picture}/>{person.name}</div>"""
+                }
+            )
+        , Repository
+            ( { name = "unbreakable"
+              , files =
+                    [ File "package.json" JSON
+                    , File "package-lock.json" JSON
+                    , File "webpack.config.js" JavaScript
+                    , Directory "src"
+                        [ File "App.jsx" JSX
+                        , File "Person.jsx" JSX
+                        ]
+                    ]
+              }
+            , SelectedFile
+                { name = "Person.jsx"
+                , extension = JSX
+                , content = """import PropTypes from 'prop-types'
+
+const Person = ({person}) => <div><img src={person.picture}/>{person.name}</div>
+
+Person.propTypes = {
+  name: PropTypes.string,
+  picture: PropTypes.string
 }"""
                 }
             )
@@ -964,19 +999,19 @@ const App = () => {
                 }
         , Deck.Text <|
             Text.Text
-                { title = "Quelques alternatives et le futur"
+                { title = "Quelques alternatives"
                 , content =
                     []
                 }
         , Deck.Text <|
             Text.Text
-                { title = "Quelques alternatives et le futur"
+                { title = "Quelques alternatives"
                 , content =
                     [ "next" ]
                 }
         , Deck.Text <|
             Text.Text
-                { title = "Quelques alternatives et le futur"
+                { title = "Quelques alternatives"
                 , content =
                     [ "next"
                     , "Rome / Vite"
