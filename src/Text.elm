@@ -31,13 +31,23 @@ view : DisplayText -> Html Message
 view displayText =
     case displayText of
         DisplayTitle { title, subtitle } ->
-            div []
+            div
+                [ style "display" "flex"
+                , style "height" "100%"
+                , style "flex-direction" "column"
+                , style "align-items" "center"
+                , if subtitle == Nothing then
+                    style "justify-content" "center"
+
+                  else
+                    style "" ""
+                ]
                 [ h1 [] [ text title ]
                 , h2 [] [ subtitle |> Maybe.withDefault "" |> text ]
                 ]
 
         DisplayText { title, content } ->
-            div [] <| h1 [] [ text title ] :: List.map (\c -> div [] [ text c ]) content
+            div [] <| h1 [] [ text title ] :: List.map (\c -> div [ style "font-size" "1.5rem" ] [ text c ]) content
 
 
 swap : Text -> Text -> DisplayText
