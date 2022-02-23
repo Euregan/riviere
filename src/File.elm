@@ -205,6 +205,12 @@ view (DisplayFile transition) =
 
                 JavaScript ->
                     SyntaxHighlight.javascript
+
+                TypeScript ->
+                    SyntaxHighlight.javascript
+
+                Elm ->
+                    SyntaxHighlight.elm
     in
     div
         [ style "background" "#21252b"

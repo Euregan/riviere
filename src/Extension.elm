@@ -10,7 +10,9 @@ type Extension
     | JSX
     | TSX
     | JavaScript
+    | TypeScript
     | HTML
+    | Elm
 
 
 view : Extension -> Svg Message
@@ -30,3 +32,9 @@ view icon =
 
         HTML ->
             Icon.html
+
+        TypeScript ->
+            Icon.typescript
+
+        Elm ->
+            Icon.elm
