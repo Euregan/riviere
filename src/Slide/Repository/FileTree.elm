@@ -1,4 +1,4 @@
-module FileTree exposing (DisplayFileTree, File(..), FileTree, swap, tick, view)
+module Slide.Repository.FileTree exposing (DisplayFileTree, File(..), FileTree, swap, tick, view)
 
 import Extension exposing (Extension)
 import Html exposing (Html, div, h2, img, li, text, ul)

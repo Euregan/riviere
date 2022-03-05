@@ -1,4 +1,4 @@
-module Text exposing (DisplayText, Text(..), swap, tick, view)
+module Slide.Text exposing (DisplayText, Text(..), swap, tick, view)
 
 import Html exposing (Html, div, h1, h2, text)
 import Html.Attributes exposing (class, style)

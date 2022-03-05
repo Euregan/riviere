@@ -1,4 +1,4 @@
-module File exposing (DisplayFile, File(..), swap, tick, view)
+module Slide.Repository.File exposing (DisplayFile, File(..), swap, tick, view)
 
 import Diff exposing (Change(..))
 import Extension exposing (Extension(..))

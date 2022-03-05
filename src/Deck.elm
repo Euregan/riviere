@@ -1,15 +1,15 @@
 module Deck exposing (Deck, Slide(..), init, next, previous, tick, view)
 
-import Application exposing (Application, DisplayApplication)
 import Array
-import File exposing (DisplayFile, File)
-import FileTree exposing (DisplayFileTree, FileTree)
 import Html exposing (Html, div, li, ul)
 import Html.Attributes exposing (style)
 import Message exposing (Message)
-import Repository exposing (DisplayRepository, Repository)
-import Terminal exposing (DisplayTerminal, Terminal)
-import Text exposing (DisplayText, Text)
+import Slide.Application as Application exposing (Application, DisplayApplication)
+import Slide.Repository as Repository exposing (DisplayRepository, Repository)
+import Slide.Repository.File as File exposing (DisplayFile, File)
+import Slide.Repository.FileTree as FileTree exposing (DisplayFileTree, FileTree)
+import Slide.Terminal as Terminal exposing (DisplayTerminal, Terminal)
+import Slide.Text as Text exposing (DisplayText, Text)
 
 
 transitionDuration =

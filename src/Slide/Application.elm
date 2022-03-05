@@ -1,4 +1,4 @@
-module Application exposing (Application(..), DisplayApplication, swap, tick, view)
+module Slide.Application exposing (Application(..), DisplayApplication, swap, tick, view)
 
 import Html exposing (Html, div, li, text, ul)
 import Html.Attributes exposing (style)

@@ -1,4 +1,4 @@
-module Terminal exposing (Color(..), DisplayTerminal, Line(..), Terminal, swap, tick, view)
+module Slide.Terminal exposing (Color(..), DisplayTerminal, Line(..), Terminal, swap, tick, view)
 
 import Color
 import Html exposing (Html, div, li, span, text, ul)

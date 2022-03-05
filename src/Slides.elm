@@ -1,14 +1,14 @@
 module Slides exposing (slides)
 
-import Application exposing (Application(..))
 import Deck exposing (Deck, Slide(..))
 import Extension exposing (Extension(..))
-import File exposing (File(..))
-import FileTree exposing (File(..))
 import GenealogyTree
 import Html
-import Terminal exposing (Color(..), Line(..))
-import Text exposing (Text(..))
+import Slide.Application as Application exposing (Application(..))
+import Slide.Repository.File as File exposing (File(..))
+import Slide.Repository.FileTree as FileTree exposing (File(..))
+import Slide.Terminal as Terminal exposing (Color(..), Line(..))
+import Slide.Text as Text exposing (Text(..))
 
 
 slides : Deck

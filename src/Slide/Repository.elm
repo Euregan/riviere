@@ -1,10 +1,10 @@
-module Repository exposing (DisplayRepository, Repository, swap, tick, view)
+module Slide.Repository exposing (DisplayRepository, Repository, swap, tick, view)
 
-import File exposing (DisplayFile, File(..))
-import FileTree exposing (DisplayFileTree, FileTree)
 import Html exposing (Html, div)
 import Html.Attributes exposing (style)
 import Message exposing (Message)
+import Slide.Repository.File as File exposing (DisplayFile, File(..))
+import Slide.Repository.FileTree as FileTree exposing (DisplayFileTree, FileTree)
 
 
 type alias Repository =
