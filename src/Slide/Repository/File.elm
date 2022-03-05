@@ -1,10 +1,12 @@
-module Slide.Repository.File exposing (DisplayFile, File(..), swap, tick, view)
+module Slide.Repository.File exposing (DisplayFile, File(..), decoder, encode, swap, tick, view)
 
 import Diff exposing (Change(..))
 import Extension exposing (Extension(..))
 import Html exposing (Html, code, div, pre, text)
 import Html.Attributes exposing (class, style)
 import Icon
+import Json.Decode as Decode
+import Json.Encode as Encode
 import Message exposing (Message)
 import SyntaxHighlight exposing (oneDark, toBlockHtml, useTheme)
 
@@ -41,6 +43,31 @@ type Transition
         }
     | Visible FileRecord
     | Hidden
+
+
+encode : File -> Encode.Value
+encode file =
+    case file of
+        None ->
+            Encode.null
+
+        SelectedFile { name, extension, content } ->
+            Encode.object
+                [ ( "name", Encode.string name )
+                , ( "extension", Extension.encode extension )
+                , ( "content", Encode.string content )
+                ]
+
+
+decoder : Decode.Decoder File
+decoder =
+    Decode.oneOf
+        [ Decode.map3 (\name extension content -> SelectedFile { name = name, extension = extension, content = content })
+            (Decode.field "name" Decode.string)
+            (Decode.field "extension" Extension.decoder)
+            (Decode.field "content" Decode.string)
+        , Decode.null None
+        ]
 
 
 swap : File -> File -> DisplayFile

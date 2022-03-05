@@ -2,19 +2,77 @@ module Slide.Application exposing (Application(..), DisplayApplication, swap, ti
 
 import Html exposing (Html, div, li, text, ul)
 import Html.Attributes exposing (style)
+import Html.Parser
+import Html.Parser.Util
+import Json.Decode as Decode
+import Json.Encode as Encode
 import Message exposing (Message)
 
 
 type Application
-    = FakeBrowser String (Html Message)
-    | FakeBrowserWithConsole String (Html Message) (List String)
+    = FakeBrowser String (List Html.Parser.Node)
+    | FakeBrowserWithConsole String (List Html.Parser.Node) (List String)
 
 
 type DisplayApplication
     = DisplayApplication Application
 
 
-browserFrame : String -> Html Message -> Html Message
+encode : Application -> Encode.Value
+encode application =
+    case application of
+        FakeBrowser url content ->
+            Encode.object
+                [ ( "type", Encode.string "fakeBrowser" )
+                , ( "url", Encode.string url )
+                , ( "content", Encode.string <| String.join "" <| List.map Html.Parser.nodeToString content )
+                ]
+
+        FakeBrowserWithConsole url content errors ->
+            Encode.object
+                [ ( "type", Encode.string "fakeBrowserWithConsole" )
+                , ( "url", Encode.string url )
+                , ( "content", Encode.string <| String.join "" <| List.map Html.Parser.nodeToString content )
+                , ( "errors", Encode.list Encode.string errors )
+                ]
+
+
+decoder : Decode.Decoder Application
+decoder =
+    let
+        contentDecoder =
+            Decode.string
+                |> Decode.andThen
+                    (\content ->
+                        case Html.Parser.run content of
+                            Ok nodes ->
+                                Decode.succeed nodes
+
+                            Err deadEnds ->
+                                Decode.fail "The HTML doesn't seem to be valid"
+                    )
+    in
+    Decode.field "type" Decode.string
+        |> Decode.andThen
+            (\type_ ->
+                case type_ of
+                    "fakeBrowser" ->
+                        Decode.map2 FakeBrowser
+                            (Decode.field "url" Decode.string)
+                            (Decode.field "content" contentDecoder)
+
+                    "fakeBrowserWithConsole" ->
+                        Decode.map3 FakeBrowserWithConsole
+                            (Decode.field "title" Decode.string)
+                            (Decode.field "content" contentDecoder)
+                            (Decode.field "errors" <| Decode.list Decode.string)
+
+                    _ ->
+                        Decode.fail <| "Type " ++ type_ ++ " is not a valid type for an Application slide"
+            )
+
+
+browserFrame : String -> List (Html Message) -> Html Message
 browserFrame url content =
     div
         [ style "border-radius" "0.6rem"
@@ -70,14 +128,14 @@ browserFrame url content =
             [ style "padding" "4rem"
             , style "flex-grow" "1"
             ]
-            [ content ]
+            content
         ]
 
 
-browserFrameWithConsole : String -> Html Message -> List String -> Html Message
+browserFrameWithConsole : String -> List (Html Message) -> List String -> Html Message
 browserFrameWithConsole url content errors =
     browserFrame url <|
-        div
+        [ div
             [ style "display" "flex"
             , style "margin" "-4rem"
             , style "height" "calc(100% + 8rem)"
@@ -86,7 +144,7 @@ browserFrameWithConsole url content errors =
                 [ style "padding" "4rem"
                 , style "flex-grow" "1"
                 ]
-                [ content ]
+                content
             , ul
                 [ style "border-left" "1px lightgray solid"
                 , style "width" "30%"
@@ -104,16 +162,17 @@ browserFrameWithConsole url content errors =
                     )
                     errors
             ]
+        ]
 
 
 view : DisplayApplication -> Html Message
 view (DisplayApplication application) =
     case application of
         FakeBrowser url content ->
-            browserFrame url content
+            browserFrame url (Html.Parser.Util.toVirtualDom content)
 
         FakeBrowserWithConsole url content errors ->
-            browserFrameWithConsole url content errors
+            browserFrameWithConsole url (Html.Parser.Util.toVirtualDom content) errors
 
 
 swap : Application -> Application -> DisplayApplication

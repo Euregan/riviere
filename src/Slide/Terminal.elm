@@ -3,6 +3,8 @@ module Slide.Terminal exposing (Color(..), DisplayTerminal, Line(..), Terminal, 
 import Color
 import Html exposing (Html, div, li, span, text, ul)
 import Html.Attributes exposing (style)
+import Json.Decode as Decode
+import Json.Encode as Encode
 import Message exposing (Message)
 
 
@@ -33,6 +35,146 @@ type alias Terminal =
 
 type DisplayTerminal
     = DisplayTerminal Terminal
+
+
+encode : Terminal -> Encode.Value
+encode ( user, lines ) =
+    let
+        encodeColor : Color -> Encode.Value
+        encodeColor color =
+            case color of
+                Default ->
+                    Encode.string "default"
+
+                White ->
+                    Encode.string "white"
+
+                Red ->
+                    Encode.string "red"
+
+                Orange ->
+                    Encode.string "orange"
+
+                Yellow ->
+                    Encode.string "yellow"
+
+                Green ->
+                    Encode.string "green"
+
+                Blue ->
+                    Encode.string "blue"
+
+                Purple ->
+                    Encode.string "purple"
+
+                Brown ->
+                    Encode.string "brown"
+
+        encodeBlock : Block -> Encode.Value
+        encodeBlock ( color, text ) =
+            Encode.object
+                [ ( "color", encodeColor color )
+                , ( "text", Encode.string text )
+                ]
+
+        encodeLine : Line -> Encode.Value
+        encodeLine line =
+            case line of
+                Command blocks ->
+                    Encode.object
+                        [ ( "type", Encode.string "command" )
+                        , ( "blocks", Encode.list encodeBlock blocks )
+                        ]
+
+                Result blocks ->
+                    Encode.object
+                        [ ( "type", Encode.string "result" )
+                        , ( "blocks", Encode.list encodeBlock blocks )
+                        ]
+    in
+    Encode.object
+        [ ( "type", Encode.string "terminal" )
+        , ( "user", Encode.string user )
+        , ( "lines", Encode.list encodeLine lines )
+        ]
+
+
+decoder : Decode.Decoder Terminal
+decoder =
+    let
+        colorDecoder : Decode.Decoder Color
+        colorDecoder =
+            Decode.string
+                |> Decode.andThen
+                    (\color ->
+                        case color of
+                            "default" ->
+                                Decode.succeed Default
+
+                            "white" ->
+                                Decode.succeed White
+
+                            "red" ->
+                                Decode.succeed Red
+
+                            "orange" ->
+                                Decode.succeed Orange
+
+                            "yellow" ->
+                                Decode.succeed Yellow
+
+                            "green" ->
+                                Decode.succeed Green
+
+                            "blue" ->
+                                Decode.succeed Blue
+
+                            "purple" ->
+                                Decode.succeed Purple
+
+                            "brown" ->
+                                Decode.succeed Brown
+
+                            _ ->
+                                Decode.fail <| "Color " ++ color ++ " is not supported"
+                    )
+
+        blockDecoder : Decode.Decoder Block
+        blockDecoder =
+            Decode.map2 (\color text -> ( color, text ))
+                (Decode.field "color" colorDecoder)
+                (Decode.field "text" Decode.string)
+
+        lineDecoder : Decode.Decoder Line
+        lineDecoder =
+            Decode.field "type" Decode.string
+                |> Decode.andThen
+                    (\type_ ->
+                        case type_ of
+                            "command" ->
+                                Decode.map Command
+                                    (Decode.field "blocks" <| Decode.list blockDecoder)
+
+                            "result" ->
+                                Decode.map Result
+                                    (Decode.field "blocks" <| Decode.list blockDecoder)
+
+                            _ ->
+                                Decode.fail <| "Type " ++ type_ ++ " is not a valid type for a Terminal's line"
+                    )
+    in
+    Decode.field "type" Decode.string
+        |> Decode.andThen
+            (\type_ ->
+                case type_ of
+                    "terminal" ->
+                        Decode.map2 (\user lines -> ( user, lines ))
+                            (Decode.field "user" Decode.string)
+                            (Decode.field "lines" (Decode.list lineDecoder))
+
+                    _ ->
+                        Decode.fail <| "Type " ++ type_ ++ " is not a valid type for a Terminal slide"
+            )
 
 
 view : DisplayTerminal -> Html Message

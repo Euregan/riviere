@@ -59,7 +59,8 @@ slides =
                     , "Il y aura du code approximatif 😬"
                     ]
                 }
-        , Application <| FakeBrowser "https://unbreakable.com" GenealogyTree.display
+
+        -- , Application <| FakeBrowser "https://unbreakable.com" GenealogyTree.display
         , Repository
             ( { name = "unbreakable"
               , files = []
@@ -696,7 +697,8 @@ const App = () => {
                 }
             )
         , Terminal ( "valentin", [ Command [ ( Default, "npm run build" ) ], Result [ ( Green, "All good chief 👍" ) ] ] )
-        , Application <| FakeBrowser "https://unbreakable.com" (Html.text "")
+
+        -- , Application <| FakeBrowser "https://unbreakable.com" (Html.text "")
         , Repository
             ( { name = "unbreakable"
               , files =

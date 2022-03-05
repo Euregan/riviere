@@ -1,9 +1,11 @@
-module Slide.Repository.FileTree exposing (DisplayFileTree, File(..), FileTree, swap, tick, view)
+module Slide.Repository.FileTree exposing (DisplayFileTree, File(..), FileTree, decoder, encode, swap, tick, view)
 
 import Extension exposing (Extension)
 import Html exposing (Html, div, h2, img, li, text, ul)
 import Html.Attributes exposing (src, style)
 import Icon
+import Json.Decode as Decode
+import Json.Encode as Encode
 import Message exposing (Message)
 
 
@@ -60,6 +62,53 @@ type Comparison a
     = NotFound
     | Keep a
     | Drop
+
+
+encode : FileTree -> Encode.Value
+encode { name, files } =
+    let
+        encodeFile : File -> Encode.Value
+        encodeFile file =
+            case file of
+                File fileName extension ->
+                    Encode.object
+                        [ ( "name", Encode.string fileName )
+                        , ( "extension", Extension.encode extension )
+                        ]
+
+                Directory directoryName children ->
+                    Encode.object
+                        [ ( "name", Encode.string directoryName )
+                        , ( "files", Encode.list encodeFile children )
+                        ]
+    in
+    Encode.object
+        [ ( "name", Encode.string name )
+        , ( "files", Encode.list encodeFile files )
+        ]
+
+
+directoryDecoder =
+    Decode.map2 Directory
+        (Decode.field "name" Decode.string)
+        (Decode.field "files" (Decode.list (Decode.lazy (\_ -> fileDecoder))))
+
+
+fileDecoder : Decode.Decoder File
+fileDecoder =
+    Decode.oneOf
+        [ Decode.map2 File
+            (Decode.field "name" Decode.string)
+            (Decode.field "extension" Extension.decoder)
+        , directoryDecoder
+        ]
+
+
+decoder : Decode.Decoder FileTree
+decoder =
+    Decode.map2 FileTree
+        (Decode.field "name" Decode.string)
+        (Decode.field "files" (Decode.list fileDecoder))
 
 
 viewFileRaw : Transition -> Html Message -> Html Message -> Html Message
