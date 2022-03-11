@@ -4,7 +4,6 @@ import Html exposing (Html, div, h1, h2, text)
 import Html.Attributes exposing (class, style)
 import Json.Decode as Decode
 import Json.Encode as Encode
-import Message exposing (Message)
 
 
 type Text
@@ -68,7 +67,7 @@ decoder =
             )
 
 
-view : DisplayText -> Html Message
+view : DisplayText -> Html msg
 view displayText =
     case displayText of
         DisplayTitle { title, subtitle } ->

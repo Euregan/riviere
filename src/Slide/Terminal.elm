@@ -5,7 +5,6 @@ import Html exposing (Html, div, li, span, text, ul)
 import Html.Attributes exposing (style)
 import Json.Decode as Decode
 import Json.Encode as Encode
-import Message exposing (Message)
 
 
 type Color
@@ -177,10 +176,10 @@ decoder =
             )
 
 
-view : DisplayTerminal -> Html Message
+view : DisplayTerminal -> Html msg
 view (DisplayTerminal ( user, lines )) =
     let
-        color : Color -> String -> Html Message
+        color : Color -> String -> Html msg
         color col cont =
             let
                 externalColor =
@@ -214,7 +213,7 @@ view (DisplayTerminal ( user, lines )) =
             in
             span [ style "color" (Color.toCssString externalColor) ] [ text cont ]
 
-        terminalFrame : Html Message -> Html Message
+        terminalFrame : Html msg -> Html msg
         terminalFrame content =
             div
                 [ style "border-radius" "0.6rem"

@@ -1,9 +1,8 @@
-module Deck exposing (Deck, Slide(..), init, next, previous, tick, view)
+module Deck exposing (Deck, Slide(..), id, init, name, next, previous, tick, view)
 
 import Array
 import Html exposing (Html, div, li, ul)
 import Html.Attributes exposing (style)
-import Message exposing (Message)
 import Slide.Application as Application exposing (Application, DisplayApplication)
 import Slide.Repository as Repository exposing (DisplayRepository, Repository)
 import Slide.Repository.File as File exposing (DisplayFile, File)
@@ -45,16 +44,30 @@ type DisplaySlide
 type Deck
     = Deck
         { deck : List Slide
+        , name : String
+        , id : String
         , current : Int
         , currentSlide : Slide
         , currentDisplayedSlide : DisplaySlide
         }
 
 
-init : Slide -> List Slide -> Deck
-init initialSlide slides =
+id : Deck -> String
+id (Deck deck) =
+    deck.id
+
+
+name : Deck -> String
+name (Deck deck) =
+    deck.name
+
+
+init : String -> String -> Slide -> List Slide -> Deck
+init deckId deckName initialSlide slides =
     Deck
         { deck = initialSlide :: slides
+        , name = deckName
+        , id = deckId
         , current = 0
         , currentSlide = initialSlide
         , currentDisplayedSlide =
@@ -306,10 +319,10 @@ previous (Deck slides) =
         Deck slides
 
 
-view : Deck -> Html Message
+view : Deck -> Html msg
 view (Deck slides) =
     let
-        transition : Float -> Html Message -> Html Message -> Html Message
+        transition : Float -> Html msg -> Html msg -> Html msg
         transition percent from to =
             ul
                 [ style "width" "calc(100vw - 20vh)"
@@ -332,7 +345,7 @@ view (Deck slides) =
                     [ to ]
                 ]
 
-        viewSlide : DisplaySlide -> Html Message
+        viewSlide : DisplaySlide -> Html msg
         viewSlide slide =
             case slide of
                 IdleApplication application ->

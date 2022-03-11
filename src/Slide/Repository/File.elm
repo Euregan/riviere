@@ -7,7 +7,6 @@ import Html.Attributes exposing (class, style)
 import Icon
 import Json.Decode as Decode
 import Json.Encode as Encode
-import Message exposing (Message)
 import SyntaxHighlight exposing (oneDark, toBlockHtml, useTheme)
 
 
@@ -107,7 +106,7 @@ swap from to =
     DisplayFile displayFile
 
 
-view : DisplayFile -> Html Message
+view : DisplayFile -> Html msg
 view (DisplayFile transition) =
     let
         iconSize =
@@ -183,7 +182,7 @@ view (DisplayFile transition) =
                     , finalizedContent
                     )
 
-        rollingTransition : Float -> Html Message -> Html Message
+        rollingTransition : Float -> Html msg -> Html msg
         rollingTransition size element =
             div
                 [ style "height" (String.fromFloat size ++ "rem")

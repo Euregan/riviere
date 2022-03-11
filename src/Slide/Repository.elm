@@ -4,7 +4,6 @@ import Html exposing (Html, div)
 import Html.Attributes exposing (style)
 import Json.Decode as Decode
 import Json.Encode as Encode
-import Message exposing (Message)
 import Slide.Repository.File as File exposing (DisplayFile, File(..))
 import Slide.Repository.FileTree as FileTree exposing (DisplayFileTree, FileTree)
 
@@ -42,7 +41,7 @@ decoder =
             )
 
 
-view : DisplayRepository -> Html Message
+view : DisplayRepository -> Html msg
 view (DisplayRepository ( fileTree, file )) =
     div
         [ style "height" "100%"

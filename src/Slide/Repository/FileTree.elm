@@ -6,7 +6,6 @@ import Html.Attributes exposing (src, style)
 import Icon
 import Json.Decode as Decode
 import Json.Encode as Encode
-import Message exposing (Message)
 
 
 newColor =
@@ -111,7 +110,7 @@ decoder =
         (Decode.field "files" (Decode.list fileDecoder))
 
 
-viewFileRaw : Transition -> Html Message -> Html Message -> Html Message
+viewFileRaw : Transition -> Html msg -> Html msg -> Html msg
 viewFileRaw transition icon text =
     let
         percentFromTransition : Float
@@ -202,10 +201,10 @@ tick delta tree =
     { tree | files = List.map tickFile tree.files }
 
 
-view : DisplayFileTree -> Html Message
+view : DisplayFileTree -> Html msg
 view tree =
     let
-        viewFile : DisplayFile -> Html Message
+        viewFile : DisplayFile -> Html msg
         viewFile file =
             li [] <|
                 case file of

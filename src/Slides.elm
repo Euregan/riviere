@@ -14,6 +14,8 @@ import Slide.Text as Text exposing (Text(..))
 slides : Deck
 slides =
     Deck.init
+        "715609d9-aea6-48c0-b1f2-cb46eee74346"
+        "Comment créer un site incassable"
         (Deck.Text <|
             Title
                 { title = "Comment créer un site incassable"

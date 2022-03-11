@@ -3,10 +3,15 @@ module Main exposing (..)
 import Browser
 import Browser.Events exposing (onAnimationFrameDelta, onClick, onKeyDown)
 import Browser.Navigation
+import Component.Layout as Layout
 import Deck exposing (Deck)
 import Html exposing (Html)
 import Json.Decode as Decoder
-import Message exposing (Key(..), Message(..))
+import Key exposing (Key(..))
+import Message exposing (Message(..), PageMessage(..))
+import Page.Home
+import Page.Presentation
+import Router exposing (Route(..))
 import Slides exposing (slides)
 import Url
 
@@ -22,9 +27,16 @@ main =
         }
 
 
+type Page
+    = Home Page.Home.Model
+    | Presentation Page.Presentation.Model
+    | NotFound
+
+
 type alias Model =
     { navigationKey : Browser.Navigation.Key
-    , slides : Deck
+    , decks : List Deck
+    , page : Page
     }
 
 
@@ -32,10 +44,29 @@ type alias Flags =
     ()
 
 
+routeToPage : List Deck -> Route -> Page
+routeToPage decks route =
+    case route of
+        Router.Home ->
+            Home <| Page.Home.init decks
+
+        Router.Presentation id ->
+            case List.head (List.filter (\d -> Deck.id d == id) decks) of
+                Just deck ->
+                    Presentation <| Page.Presentation.init deck
+
+                Nothing ->
+                    NotFound
+
+
 init : Flags -> Url.Url -> Browser.Navigation.Key -> ( Model, Cmd Message )
 init flags url key =
     ( { navigationKey = key
-      , slides = slides
+      , decks = [ slides ]
+      , page =
+            Maybe.withDefault NotFound <|
+                Maybe.map (routeToPage [ slides ]) <|
+                    Router.fromUrl url
       }
     , Cmd.none
     )
@@ -87,76 +118,86 @@ update message model =
                     )
 
         UrlChanged url ->
-            -- stepUrl url model
-            ( model, Cmd.none )
+            ( { model
+                | page =
+                    Maybe.withDefault NotFound <|
+                        Maybe.map (routeToPage model.decks) <|
+                            Router.fromUrl url
+              }
+            , Cmd.none
+            )
 
         Clicked ->
-            ( { model | slides = Deck.next model.slides }, Cmd.none )
+            case model.page of
+                Presentation mdl ->
+                    ( { model
+                        | page =
+                            Presentation <|
+                                Page.Presentation.update Page.Presentation.Clicked mdl
+                      }
+                    , Cmd.none
+                    )
+
+                _ ->
+                    ( model, Cmd.none )
 
         KeyPressed key ->
-            ( { model
-                | slides =
-                    case key of
-                        ArrowLeft ->
-                            Deck.previous model.slides
+            case model.page of
+                Presentation mdl ->
+                    ( { model
+                        | page =
+                            Presentation <|
+                                Page.Presentation.update (Page.Presentation.KeyPressed key) mdl
+                      }
+                    , Cmd.none
+                    )
 
-                        ArrowRight ->
-                            Deck.next model.slides
-
-                        Space ->
-                            Deck.next model.slides
-
-                        Other ->
-                            model.slides
-              }
-            , Cmd.none
-            )
+                _ ->
+                    ( model, Cmd.none )
 
         Tick delta ->
-            ( { model
-                | slides = Deck.tick delta model.slides
-              }
-            , Cmd.none
-            )
+            case model.page of
+                Presentation mdl ->
+                    ( { model
+                        | page =
+                            Presentation <|
+                                Page.Presentation.update (Page.Presentation.Tick delta) mdl
+                      }
+                    , Cmd.none
+                    )
 
+                _ ->
+                    ( model, Cmd.none )
 
+        PageMessage pageMessage ->
+            case ( model.page, pageMessage ) of
+                ( Home mdl, HomeMessage msg ) ->
+                    ( { model | page = Home <| Page.Home.update msg mdl }, Cmd.none )
 
--- stepUrl : Url.Url -> Model -> ( Model, Cmd Message )
--- stepUrl url model =
---     let
---         session =
---             exit model
---
---         parser =
---             oneOf
---                 [ route top
---                     (stepSearch model (Search.init session))
---                 , route (s "packages" </> author_ </> project_)
---                     (\author project ->
---                         stepDiff model (Diff.init session author project)
---                     )
---                 , route (s "packages" </> author_ </> project_ </> version_ </> focus_)
---                     (\author project version focus ->
---                         stepDocs model (Docs.init session author project version focus)
---                     )
---                 , route (s "help" </> s "design-guidelines")
---                     (stepHelp model (Help.init session "Design Guidelines" "/assets/help/design-guidelines.md"))
---                 , route (s "help" </> s "documentation-format")
---                     (stepHelp model (Help.init session "Documentation Format" "/assets/help/documentation-format.md"))
---                 ]
---     in
---     case Parser.parse parser url of
---         Just answer ->
---             answer
---
---         Nothing ->
---             ( { model | page = NotFound session }
---             , Cmd.none
---             )
+                ( Presentation mdl, PresentationMessage msg ) ->
+                    ( { model | page = Presentation <| Page.Presentation.update msg mdl }, Cmd.none )
+
+                ( NotFound, _ ) ->
+                    ( model, Cmd.none )
+
+                ( Home mdl, _ ) ->
+                    ( model, Cmd.none )
+
+                ( Presentation mdl, _ ) ->
+                    ( model, Cmd.none )
 
 
 view : Model -> Browser.Document Message
-view model =
-    { title = "Making an unbreakable website"
-    , body = [ Deck.view model.slides ]
+view { page } =
+    { title = "Riviere - A tool to make project presentations"
+    , body =
+        case page of
+            Home model ->
+                Page.Home.view model
+
+            Presentation model ->
+                Page.Presentation.view model
+
+            NotFound ->
+                Layout.view [ Html.text "404 - Not Found" ]
     }

@@ -3,7 +3,6 @@ module Extension exposing (Extension(..), decoder, encode, view)
 import Icon
 import Json.Decode as Decode
 import Json.Encode as Encode
-import Message exposing (Message)
 import Svg exposing (Svg)
 
 
@@ -74,7 +73,7 @@ decoder =
             )
 
 
-view : Extension -> Svg Message
+view : Extension -> Svg msg
 view icon =
     case icon of
         JSON ->

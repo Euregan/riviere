@@ -6,7 +6,6 @@ import Html.Parser
 import Html.Parser.Util
 import Json.Decode as Decode
 import Json.Encode as Encode
-import Message exposing (Message)
 
 
 type Application
@@ -72,7 +71,7 @@ decoder =
             )
 
 
-browserFrame : String -> List (Html Message) -> Html Message
+browserFrame : String -> List (Html msg) -> Html msg
 browserFrame url content =
     div
         [ style "border-radius" "0.6rem"
@@ -132,7 +131,7 @@ browserFrame url content =
         ]
 
 
-browserFrameWithConsole : String -> List (Html Message) -> List String -> Html Message
+browserFrameWithConsole : String -> List (Html msg) -> List String -> Html msg
 browserFrameWithConsole url content errors =
     browserFrame url <|
         [ div
@@ -165,7 +164,7 @@ browserFrameWithConsole url content errors =
         ]
 
 
-view : DisplayApplication -> Html Message
+view : DisplayApplication -> Html msg
 view (DisplayApplication application) =
     case application of
         FakeBrowser url content ->
