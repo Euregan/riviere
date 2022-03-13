@@ -11,7 +11,15 @@
   "devDependencies": {
     "@parcel/transformer-elm": "^2.2.1",
     "elm": "^0.19.1-5",
-    "parcel": "^2.2.1"
+    "parcel": "^2.2.1",
+    "prisma": "^3.10.0"
   },
-  "dependencies": {}
+  "dependencies": {
+    "@prisma/client": "^3.10.0",
+    "argon2": "^0.28.5",
+    "chokidar": "^3.5.3",
+    "express": "^4.17.3",
+    "jsonwebtoken": "^8.5.1",
+    "mysql2": "^2.3.3"
+  }
 }

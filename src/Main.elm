@@ -11,9 +11,12 @@ import Key exposing (Key(..))
 import Message exposing (Message(..), PageMessage(..))
 import Page.Home
 import Page.Presentation
+import Page.Signin
+import Page.Signup
 import Router exposing (Route(..))
 import Slides exposing (slides)
 import Url
+import User exposing (User(..))
 
 
 main =
@@ -30,12 +33,15 @@ main =
 type Page
     = Home Page.Home.Model
     | Presentation Page.Presentation.Model
+    | Signup Page.Signup.Model
+    | Signin Page.Signin.Model
     | NotFound
 
 
 type alias Model =
     { navigationKey : Browser.Navigation.Key
     , decks : List Deck
+    , user : User
     , page : Page
     }
 
@@ -58,11 +64,18 @@ routeToPage decks route =
                 Nothing ->
                     NotFound
 
+        Router.Signup ->
+            Signup Page.Signup.init
+
+        Router.Signin ->
+            Signin Page.Signin.init
+
 
 init : Flags -> Url.Url -> Browser.Navigation.Key -> ( Model, Cmd Message )
 init flags url key =
     ( { navigationKey = key
       , decks = [ slides ]
+      , user = Visitor
       , page =
             Maybe.withDefault NotFound <|
                 Maybe.map (routeToPage [ slides ]) <|
@@ -177,6 +190,46 @@ update message model =
                 ( Presentation mdl, PresentationMessage msg ) ->
                     ( { model | page = Presentation <| Page.Presentation.update msg mdl }, Cmd.none )
 
+                ( Signup mdl, SignupMessage msg ) ->
+                    let
+                        ( page, command ) =
+                            Page.Signup.update msg mdl
+                    in
+                    case msg of
+                        Page.Signup.SignedUp (Ok jwt) ->
+                            let
+                                maybeUser =
+                                    User.login jwt
+                            in
+                            ( { model | user = Result.withDefault Visitor maybeUser }
+                            , Browser.Navigation.pushUrl model.navigationKey "/"
+                            )
+
+                        _ ->
+                            ( { model | page = Signup page }
+                            , Cmd.map (\m -> PageMessage <| SignupMessage m) command
+                            )
+
+                ( Signin mdl, SigninMessage msg ) ->
+                    let
+                        ( page, command ) =
+                            Page.Signin.update msg mdl
+                    in
+                    case msg of
+                        Page.Signin.SignedIn (Ok jwt) ->
+                            let
+                                maybeUser =
+                                    User.login jwt
+                            in
+                            ( { model | user = Result.withDefault Visitor maybeUser }
+                            , Browser.Navigation.pushUrl model.navigationKey "/"
+                            )
+
+                        _ ->
+                            ( { model | page = Signin page }
+                            , Cmd.map (\m -> PageMessage <| SigninMessage m) command
+                            )
+
                 ( NotFound, _ ) ->
                     ( model, Cmd.none )
 
@@ -184,6 +237,12 @@ update message model =
                     ( model, Cmd.none )
 
                 ( Presentation mdl, _ ) ->
+                    ( model, Cmd.none )
+
+                ( Signup mdl, _ ) ->
+                    ( model, Cmd.none )
+
+                ( Signin mdl, _ ) ->
                     ( model, Cmd.none )
 
 
@@ -197,6 +256,14 @@ view { page } =
 
             Presentation model ->
                 Page.Presentation.view model
+
+            Signup model ->
+                Page.Signup.view model
+                    |> List.map (Html.map (\msg -> PageMessage <| SignupMessage msg))
+
+            Signin model ->
+                Page.Signin.view model
+                    |> List.map (Html.map (\msg -> PageMessage <| SigninMessage msg))
 
             NotFound ->
                 Layout.view [ Html.text "404 - Not Found" ]

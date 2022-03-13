@@ -14,6 +14,8 @@ import Url.Parser as Parser exposing ((</>), Parser, oneOf, s, string)
 type Route
     = Home
     | Presentation String
+    | Signup
+    | Signin
 
 
 parser : Parser (Route -> a) a
@@ -21,6 +23,8 @@ parser =
     oneOf
         [ Parser.map Home Parser.top
         , Parser.map Presentation (s "presentation" </> Parser.string)
+        , Parser.map Signup (s "signup")
+        , Parser.map Signin (s "signin")
         ]
 
 
@@ -60,3 +64,9 @@ routeToPieces page =
 
         Presentation id ->
             [ "presentation", id ]
+
+        Signup ->
+            [ "signup" ]
+
+        Signin ->
+            [ "signin" ]
