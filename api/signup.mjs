@@ -1,6 +1,7 @@
 import prismaClientPackage from '@prisma/client'
 import argon2 from 'argon2'
 import jsonwebtoken from 'jsonwebtoken'
+import { v4 } from 'uuid'
 
 const prisma = new prismaClientPackage.PrismaClient()
 
@@ -10,18 +11,20 @@ export default function handler(request, response) {
   return argon2
     .hash(password)
     .then((password) =>
-      prisma.user.create({ data: { email, password, name } }).then((user) => {
-        const token = jsonwebtoken.sign(
-          {
-            id: user.id,
-            email: user.email,
-            name: user.name
-          },
-          process.env.JWT_SECRET
-        )
+      prisma.user
+        .create({ data: { id: v4(), email, password, name } })
+        .then((user) => {
+          const token = jsonwebtoken.sign(
+            {
+              id: user.id,
+              email: user.email,
+              name: user.name
+            },
+            process.env.JWT_SECRET
+          )
 
-        response.status(200).send({ jwt: token })
-      })
+          response.status(200).send({ jwt: token })
+        })
     )
     .catch((error) => {
       console.error(error)
